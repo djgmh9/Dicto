@@ -14,6 +14,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.TextStyle
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+
 @Composable
 fun DictionaryScreen(
     modifier: Modifier = Modifier,
@@ -106,7 +112,10 @@ fun DictionaryScreen(
 
                     // Item 2...N: The list of individual words
                     items(state.wordTranslations) { wordItem ->
-                        WordRowItem(wordItem)
+                        WordRowItem(
+                            wordResult = wordItem,
+                            onToggleSave = { word -> viewModel.toggleSave(word) }
+                        )
                     }
                 }
             }
@@ -116,7 +125,10 @@ fun DictionaryScreen(
 
 // Helper composable for a single row
 @Composable
-fun WordRowItem(wordResult: WordResult) {
+fun WordRowItem(
+    wordResult: WordResult,
+    onToggleSave: (String) -> Unit // Callback function
+) {
     Card(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -128,20 +140,28 @@ fun WordRowItem(wordResult: WordResult) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // ENGLISH (Left Side): Force LTR
-            Text(
-                text = wordResult.translation,
-                color = MaterialTheme.colorScheme.primary,
-                // MERGE: Take bodyLarge AND apply LTR direction
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    textDirection = TextDirection.Ltr
-                )
-            )
+            // LEFT: Star Icon + English
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { onToggleSave(wordResult.original) }) {
+                    Icon(
+                        imageVector = if (wordResult.isSaved) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                        contentDescription = "Save word",
+                        tint = if (wordResult.isSaved) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                    )
+                }
 
-            // ARABIC (Right Side): Force RTL
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = wordResult.translation,
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodyLarge.copy(textDirection = TextDirection.Ltr)
+                )
+            }
+
+            // RIGHT: Arabic
             Text(
                 text = wordResult.original,
-                // MERGE: Take bodyLarge AND apply Bold AND RTL direction
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Bold,
                     textDirection = TextDirection.Rtl
