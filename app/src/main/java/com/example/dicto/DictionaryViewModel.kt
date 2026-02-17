@@ -2,7 +2,6 @@ package com.example.dicto
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,6 +38,29 @@ class DictionaryViewModel(application: Application) : AndroidViewModel(applicati
 
     private val repository = TranslationRepository()
     private val storage = WordStorage(application) // Initialize storage
+
+    // 1. A state to hold the list of saved words + their translations
+    private val _savedWordsList = MutableStateFlow<List<WordResult>>(emptyList())
+    val savedWordsList = _savedWordsList.asStateFlow()
+
+    init {
+        // 2. Watch the DataStore for changes automatically
+        viewModelScope.launch {
+            storage.savedWordsFlow.collect { savedSet ->
+                // When the set changes, translate all of them
+                // (In a real pro app, you might cache these translations in a Room database,
+                // but for ML Kit on-device, this is acceptable and simple)
+                val formattedList = savedSet.map { arabicWord ->
+                    async {
+                        val translation = repository.translateText(arabicWord).getOrDefault("...")
+                        WordResult(arabicWord, translation, isSaved = true)
+                    }
+                }.awaitAll() // Wait for all to finish
+
+                _savedWordsList.value = formattedList.sortedBy { it.original } // Sort A-Z
+            }
+        }
+    }
 
     // We keep the raw translation separate from the UI state now
     private val _rawTranslation = MutableStateFlow<List<Pair<String, String>>>(emptyList())

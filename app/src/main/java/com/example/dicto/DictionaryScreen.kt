@@ -20,16 +20,57 @@ import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 @Composable
 fun DictionaryScreen(
     modifier: Modifier = Modifier,
     viewModel: DictionaryViewModel = viewModel()
 ) {
+    // 0. State to track which tab is selected (0 = Home, 1 = Saved)
+    var selectedTab by remember { mutableIntStateOf(0) }
+
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        // 1. Add the Bottom Bar
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
+                    label = { Text("Translator") },
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Favorite, contentDescription = "Saved") },
+                    label = { Text("Saved") },
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 }
+                )
+            }
+        }
+    ) { innerPadding ->
+        // 2. Switch Content based on tab
+        Box(modifier = Modifier.padding(innerPadding)) {
+            if (selectedTab == 0) {
+                TranslatorContent(viewModel)
+            } else {
+                SavedWordsContent(viewModel)
+            }
+        }
+    }
+}
+
+@Composable
+fun TranslatorContent(viewModel: DictionaryViewModel) {
     val uiState by viewModel.uiState.collectAsState()
+    // Move the local textInput state here
     var textInput by remember { mutableStateOf("") }
 
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -114,10 +155,46 @@ fun DictionaryScreen(
                     items(state.wordTranslations) { wordItem ->
                         WordRowItem(
                             wordResult = wordItem,
-                            onToggleSave = { word -> viewModel.toggleSave(word) }
+                            onToggleSave = { viewModel.toggleSave(it) }
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun SavedWordsContent(viewModel: DictionaryViewModel) {
+    val savedWords by viewModel.savedWordsList.collectAsState()
+
+    if (savedWords.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("No saved words yet", style = MaterialTheme.typography.bodyLarge)
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item {
+                Text(
+                    "My Vocabulary",
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+
+            items(savedWords) { wordResult ->
+                // We reuse the exact same Row Item!
+                // Because we pass 'onToggleSave', clicking the star here will UN-SAVE it
+                // and it will instantly disappear from this list.
+                WordRowItem(
+                    wordResult = wordResult,
+                    onToggleSave = { viewModel.toggleSave(it) }
+                )
             }
         }
     }
