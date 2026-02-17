@@ -61,7 +61,7 @@ class DictionaryViewModel : ViewModel() {
             // Regex "\\W+" splits by anything that isn't a word character.
             // Remove duplicates
             val words = currentQuery.trim()
-                .split(Regex("\\W+"))             // Split by non-word characters
+                .split(Regex("[^\\p{L}]+"))             // Split by non-letter characters
                 .filter { it.isNotEmpty() }       // Remove empty strings
                 .distinctBy { it.lowercase() }    // Removes duplicates (case-insensitive)
 
