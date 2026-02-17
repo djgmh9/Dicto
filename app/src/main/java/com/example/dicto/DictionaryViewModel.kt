@@ -142,14 +142,22 @@ class DictionaryViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    // 1. State for the Phrase Builder
+    // State for the Phrase Builder
     private val _selectedPhrase = MutableStateFlow("")
     val selectedPhrase = _selectedPhrase.asStateFlow()
 
     private val _phraseTranslation = MutableStateFlow<String?>(null)
     val phraseTranslation = _phraseTranslation.asStateFlow()
 
-    // 2. Function to update selection and translate immediately
+    // NEW: StateFlow to check if the selected phrase is saved
+    val isPhraseSaved: StateFlow<Boolean> = combine(
+        _selectedPhrase,
+        storage.savedWordsFlow
+    ) { selectedPhraseValue, savedSet ->
+        savedSet.contains(selectedPhraseValue) && selectedPhraseValue.isNotBlank()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    // Function to update selection and translate immediately
     fun onPhraseSelectionChanged(selectedWords: List<String>) {
         if (selectedWords.isEmpty()) {
             _selectedPhrase.value = ""

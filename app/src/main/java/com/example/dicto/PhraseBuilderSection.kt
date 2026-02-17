@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -93,6 +94,7 @@ fun PhraseBuilderSection(
 fun PhraseResultCard(
     original: String,
     translation: String?,
+    isSaved: Boolean, // ADDED: New parameter for saved status
     onSave: () -> Unit
 ) {
     if (original.isBlank() || translation == null) return
@@ -123,7 +125,12 @@ fun PhraseResultCard(
 
             // Allow saving this phrase too!
             IconButton(onClick = onSave) {
-                Icon(Icons.Outlined.StarBorder, contentDescription = "Save Phrase")
+                // UPDATED: Dynamically show filled or outlined star
+                Icon(
+                    imageVector = if (isSaved) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                    contentDescription = "Save Phrase",
+                    tint = if (isSaved) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                )
             }
         }
     }

@@ -2,7 +2,7 @@ package com.example.dicto
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.* // Make sure to import all '*' from runtime
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -46,6 +46,7 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
     // Watch the phrase builder states
     val selectedPhrase by viewModel.selectedPhrase.collectAsState()
     val phraseTranslation by viewModel.phraseTranslation.collectAsState()
+    val isPhraseSaved by viewModel.isPhraseSaved.collectAsState() // NEW: Collect saved status for the phrase
 
     Column(
         modifier = Modifier
@@ -127,6 +128,7 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
                         PhraseResultCard(
                             original = selectedPhrase,
                             translation = phraseTranslation,
+                            isSaved = isPhraseSaved, // UPDATED: Pass the new saved status
                             onSave = { viewModel.toggleSave(selectedPhrase) } // You can save phrases too!
                         )
                     }
