@@ -12,6 +12,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.dicto.ui.theme.DictoTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.painterResource // For loading custom icons if needed
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.Icons
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,13 +35,33 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             DictoTheme {
+                // 0. State to track which tab is selected (0 = Translator, 1 = Saved)
+                var selectedTab by remember { mutableIntStateOf(0) }
+
                 // Scaffold provides the structure
                 Scaffold(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    bottomBar = {
+                        NavigationBar {
+                            NavigationBarItem(
+                                icon = { Icon(Icons.Filled.Home, contentDescription = "Translator") },
+                                label = { Text("Translator") },
+                                selected = selectedTab == 0,
+                                onClick = { selectedTab = 0 }
+                            )
+                            NavigationBarItem(
+                                icon = { Icon(Icons.Filled.Favorite, contentDescription = "Saved Words") },
+                                label = { Text("Saved") },
+                                selected = selectedTab == 1,
+                                onClick = { selectedTab = 1 }
+                            )
+                        }
+                    }
                 ) { innerPadding ->
-                    // innerPadding calculates the safe area (avoiding status bars)
+                    // innerPadding calculates the safe area (avoiding status bar and navigation bar)
                     DictionaryScreen(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        selectedTab = selectedTab
                     )
                 }
             }

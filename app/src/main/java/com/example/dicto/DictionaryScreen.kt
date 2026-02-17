@@ -20,45 +20,19 @@ import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+// DictionaryScreen now takes selectedTab as a parameter
 @Composable
 fun DictionaryScreen(
     modifier: Modifier = Modifier,
+    selectedTab: Int,
     viewModel: DictionaryViewModel = viewModel()
 ) {
-    // 0. State to track which tab is selected (0 = Home, 1 = Saved)
-    var selectedTab by remember { mutableIntStateOf(0) }
-
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        // 1. Add the Bottom Bar
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
-                    label = { Text("Translator") },
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Filled.Favorite, contentDescription = "Saved") },
-                    label = { Text("Saved") },
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 }
-                )
-            }
-        }
-    ) { innerPadding ->
-        // 2. Switch Content based on tab
-        Box(modifier = Modifier.padding(innerPadding)) {
-            if (selectedTab == 0) {
-                TranslatorContent(viewModel)
-            } else {
-                SavedWordsContent(viewModel)
-            }
+    // Content is now switched based on the selectedTab passed from MainActivity
+    Box(modifier = modifier.fillMaxSize()) {
+        if (selectedTab == 0) {
+            TranslatorContent(viewModel)
+        } else {
+            SavedWordsContent(viewModel)
         }
     }
 }
@@ -90,10 +64,7 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
                 textInput = it
                 viewModel.onQueryChanged(it)
             },
-            label = {
-                // We can also align the label to the right
-                Text("أدخل جملة (Enter sentence)")
-            },
+            label = { Text("أدخل جملة (Enter sentence)") },
             modifier = Modifier.fillMaxWidth(),
             minLines = 2,
 
@@ -102,9 +73,6 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
                 textDirection = TextDirection.Rtl, // Forces text to start from the Right
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize
             ),
-            // Optional: If you want the label to always align right too:
-            // colors = OutlinedTextFieldDefaults.colors(),
-            // but usually just the input text being RTL is enough.
         )
 
         Spacer(modifier = Modifier.height(8.dp))
