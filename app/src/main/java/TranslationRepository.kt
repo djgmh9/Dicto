@@ -6,7 +6,7 @@ import kotlinx.coroutines.tasks.await
 
 class TranslationRepository {
 
-    // For this example, let's hardcode English -> German.
+    // For this example, let's hardcode arabic to english
     // In a real app, you would pass these as arguments.
     private val options = TranslatorOptions.Builder()
         .setSourceLanguage(TranslateLanguage.ARABIC)

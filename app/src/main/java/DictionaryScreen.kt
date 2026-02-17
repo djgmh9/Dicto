@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun DictionaryScreen(
+    modifier: Modifier = Modifier,
     viewModel: DictionaryViewModel = viewModel()
 ) {
     // Collect the state flow

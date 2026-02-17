@@ -19,15 +19,20 @@ import com.example.dicto.ui.theme.DictoTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // This makes the app draw behind the status bar (modern look)
         enableEdgeToEdge()
+
         setContent {
             DictoTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    // HERE IS THE CHANGE: Call your screen
-                    DictionaryScreen()
+                // Scaffold provides the structure
+                Scaffold(
+                    modifier = Modifier.fillMaxSize()
+                ) { innerPadding ->
+                    // innerPadding calculates the safe area (avoiding status bars)
+                    DictionaryScreen(
+                        modifier = Modifier.padding(innerPadding)
+                    )
                 }
             }
         }
