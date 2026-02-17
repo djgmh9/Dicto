@@ -142,6 +142,36 @@ class DictionaryViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    // 1. State for the Phrase Builder
+    private val _selectedPhrase = MutableStateFlow("")
+    val selectedPhrase = _selectedPhrase.asStateFlow()
+
+    private val _phraseTranslation = MutableStateFlow<String?>(null)
+    val phraseTranslation = _phraseTranslation.asStateFlow()
+
+    // 2. Function to update selection and translate immediately
+    fun onPhraseSelectionChanged(selectedWords: List<String>) {
+        if (selectedWords.isEmpty()) {
+            _selectedPhrase.value = ""
+            _phraseTranslation.value = null
+            return
+        }
+
+        // Join the words with a space (e.g., "Hot" + "Dog" -> "Hot Dog")
+        val combinedPhrase = selectedWords.joinToString(" ")
+        _selectedPhrase.value = combinedPhrase
+
+        // Translate this specific chunk
+        viewModelScope.launch {
+            val result = repository.translateText(combinedPhrase)
+            result.onSuccess {
+                _phraseTranslation.value = it
+            }.onFailure {
+                _phraseTranslation.value = "Error"
+            }
+        }
+    }
+
     // Cleanup
     override fun onCleared() {
         super.onCleared()

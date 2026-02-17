@@ -66,8 +66,12 @@ fun DictionaryScreen(
 @Composable
 fun TranslatorContent(viewModel: DictionaryViewModel) {
     val uiState by viewModel.uiState.collectAsState()
+
     // Move the local textInput state here
     var textInput by remember { mutableStateOf("") }
+    // Watch the phrase builder states
+    val selectedPhrase by viewModel.selectedPhrase.collectAsState()
+    val phraseTranslation by viewModel.phraseTranslation.collectAsState()
 
     Column(
         modifier = Modifier
@@ -113,7 +117,7 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
             Text("Translate")
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // --- RESULTS SECTION ---
         when (val state = uiState) {
@@ -132,26 +136,39 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Item 1: The Full Sentence Translation Header
+                    // 1. Full Sentence Result (Existing)
                     item {
                         Text("Full Translation:", style = MaterialTheme.typography.labelLarge)
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer
-                            ),
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = state.fullTranslation,
-                                style = MaterialTheme.typography.headlineSmall,
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        Text(state.fullTranslation, style = MaterialTheme.typography.headlineSmall)
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+                    }
+
+                    // 2. NEW: PHRASE BUILDER SECTION
+                    item {
+                        // Extract just the original words list from the result
+                        val originalWords = state.wordTranslations.map { it.original }
+
+                        PhraseBuilderSection(
+                            words = originalWords,
+                            onPhraseChanged = { viewModel.onPhraseSelectionChanged(it) }
+                        )
+                    }
+
+                    // 3. NEW: PHRASE RESULT DISPLAY
+                    item {
+                        PhraseResultCard(
+                            original = selectedPhrase,
+                            translation = phraseTranslation,
+                            onSave = { viewModel.toggleSave(selectedPhrase) } // You can save phrases too!
+                        )
+                    }
+
+                    item {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
                         Text("Word by Word:", style = MaterialTheme.typography.labelLarge)
                     }
 
-                    // Item 2...N: The list of individual words
+                    // 4. Individual Words (Existing)
                     items(state.wordTranslations) { wordItem ->
                         WordRowItem(
                             wordResult = wordItem,
