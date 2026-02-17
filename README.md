@@ -1,6 +1,6 @@
 # Dicto - Arabic-English Dictionary App
 
-Just my own dict my friends.
+Just my own dict. don't use it yet cuz it's still a mess. though it's usable.
 
 ## Features
 
