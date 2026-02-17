@@ -8,30 +8,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.text.font.FontWeight
+
 @Composable
 fun DictionaryScreen(
     modifier: Modifier = Modifier,
     viewModel: DictionaryViewModel = viewModel()
 ) {
-    // Collect the state flow
     val uiState by viewModel.uiState.collectAsState()
-
-    // Local state for the text field
     var textInput by remember { mutableStateOf("") }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Arabic -> English Dictionary",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        // --- INPUT SECTION ---
+        Text("Arabic -> English Dictionary", style = MaterialTheme.typography.headlineSmall)
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = textInput,
@@ -39,47 +37,93 @@ fun DictionaryScreen(
                 textInput = it
                 viewModel.onQueryChanged(it)
             },
-            label = { Text("Enter word") },
+            label = { Text("Enter sentence") },
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            minLines = 2 // Make it a bit taller for sentences
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Button(
             onClick = { viewModel.translate() },
-            enabled = uiState !is DictionaryUiState.Loading
+            enabled = uiState !is DictionaryUiState.Loading,
+            modifier = Modifier.align(Alignment.End)
         ) {
             Text("Translate")
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // UI State Handling
+        // --- RESULTS SECTION ---
         when (val state = uiState) {
             is DictionaryUiState.Idle -> {
-                Text("Enter a word to start", style = MaterialTheme.typography.bodyLarge)
+                Text("Enter text to start", style = MaterialTheme.typography.bodyLarge)
             }
             is DictionaryUiState.Loading -> {
                 CircularProgressIndicator()
-                Text("Downloading model or translating...", modifier = Modifier.padding(top = 8.dp))
+            }
+            is DictionaryUiState.Error -> {
+                Text(text = state.message, color = MaterialTheme.colorScheme.error)
             }
             is DictionaryUiState.Success -> {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                // We use LazyColumn for the list so it scrolls efficiently
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = "Translation:", style = MaterialTheme.typography.labelMedium)
-                        Text(text = state.result, style = MaterialTheme.typography.headlineSmall)
+                    // Item 1: The Full Sentence Translation Header
+                    item {
+                        Text("Full Translation:", style = MaterialTheme.typography.labelLarge)
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            ),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = state.fullTranslation,
+                                style = MaterialTheme.typography.headlineSmall,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        Text("Word by Word:", style = MaterialTheme.typography.labelLarge)
+                    }
+
+                    // Item 2...N: The list of individual words
+                    items(state.wordTranslations) { wordItem ->
+                        WordRowItem(wordItem)
                     }
                 }
             }
-            is DictionaryUiState.Error -> {
-                Text(
-                    text = "Error: ${state.message}",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
+        }
+    }
+}
+
+// Helper composable for a single row
+@Composable
+fun WordRowItem(wordResult: WordResult) {
+    Card(
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = wordResult.original,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = wordResult.translation,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

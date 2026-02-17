@@ -5,13 +5,26 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+
+// 1. Add a data class to hold individual word results
+data class WordResult(
+    val original: String,
+    val translation: String
+)
 
 // Represents the different states of our screen
 sealed interface DictionaryUiState {
     data object Idle : DictionaryUiState
     data object Loading : DictionaryUiState
-    data class Success(val result: String) : DictionaryUiState
     data class Error(val message: String) : DictionaryUiState
+
+    // UPDATED: Now holds full sentence + list of words
+    data class Success(
+        val fullTranslation: String,
+        val wordTranslations: List<WordResult>
+    ) : DictionaryUiState
 }
 
 class DictionaryViewModel : ViewModel() {
@@ -41,10 +54,29 @@ class DictionaryViewModel : ViewModel() {
         _uiState.value = DictionaryUiState.Loading
 
         viewModelScope.launch {
-            val result = repository.translateText(currentQuery)
+            // 1. Translate the full sentence
+            val fullResult = repository.translateText(currentQuery)
 
-            result.onSuccess { translatedText ->
-                _uiState.value = DictionaryUiState.Success(translatedText)
+            // 2. Split sentence into words (removing punctuation like . , ! ?)
+            // Regex "\\W+" splits by anything that isn't a word character.
+            val words = currentQuery.trim().split(Regex("\\W+")).filter { it.isNotEmpty() }
+
+            // 3. Translate each word in PARALLEL using async/awaitAll
+            // This is much faster than doing them one by one!
+            val wordTasks = words.map { word ->
+                async {
+                    val translation = repository.translateText(word).getOrDefault("")
+                    WordResult(original = word, translation = translation)
+                }
+            }
+            val wordResults = wordTasks.awaitAll()
+
+            // 4. Handle the result
+            fullResult.onSuccess { translatedSentence ->
+                _uiState.value = DictionaryUiState.Success(
+                    fullTranslation = translatedSentence,
+                    wordTranslations = wordResults
+                )
             }.onFailure { error ->
                 _uiState.value = DictionaryUiState.Error(error.localizedMessage ?: "Unknown error")
             }
