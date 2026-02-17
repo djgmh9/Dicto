@@ -1,8 +1,11 @@
 package com.example.dicto
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -11,6 +14,10 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 
 // 1. Add a data class to hold individual word results
@@ -33,150 +40,150 @@ sealed interface DictionaryUiState {
     ) : DictionaryUiState
 }
 
-// CHANGE: Inherit from AndroidViewModel to get 'application' context
 class DictionaryViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = TranslationRepository()
-    private val storage = WordStorage(application) // Initialize storage
+    private val storage = WordStorage(application)
 
-    // 1. A state to hold the list of saved words + their translations
-    private val _savedWordsList = MutableStateFlow<List<WordResult>>(emptyList())
-    val savedWordsList = _savedWordsList.asStateFlow()
+    // 1. INPUT: The text the user types
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = _searchQuery.asStateFlow()
 
-    init {
-        // 2. Watch the DataStore for changes automatically
-        viewModelScope.launch {
-            storage.savedWordsFlow.collect { savedSet ->
-                // When the set changes, translate all of them
-                // (In a real pro app, you might cache these translations in a Room database,
-                // but for ML Kit on-device, this is acceptable and simple)
-                val formattedList = savedSet.map { arabicWord ->
-                    async {
-                        val translation = repository.translateText(arabicWord).getOrDefault("...")
-                        WordResult(arabicWord, translation, isSaved = true)
-                    }
-                }.awaitAll() // Wait for all to finish
+    // 2. INTERNAL: Phrase building states
+    private val _selectedPhrase = MutableStateFlow("")
+    val selectedPhrase = _selectedPhrase.asStateFlow()
+    private val _phraseTranslation = MutableStateFlow<String?>(null)
+    val phraseTranslation = _phraseTranslation.asStateFlow()
 
-                _savedWordsList.value = formattedList.sortedBy { it.original } // Sort A-Z
+    // 2.5. CLIPBOARD MONITORING: Control clipboard auto-translate
+    private val _clipboardMonitoringEnabled = MutableStateFlow(true)
+    val clipboardMonitoringEnabled = _clipboardMonitoringEnabled.asStateFlow()
+
+    // 3. OUTPUT: The Reactive UI State Pipeline
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    val uiState: StateFlow<DictionaryUiState> = _searchQuery
+        // A. DEBOUNCE: Wait 600ms after user stops typing to avoid spamming translation
+        .debounce(600L)
+        .flatMapLatest { query ->
+            if (query.isBlank()) {
+                flowOf<DictionaryUiState>(DictionaryUiState.Idle)
+            } else {
+                // Start loading immediately
+                flow<DictionaryUiState> {
+                    emit(DictionaryUiState.Loading)
+
+                    // B. PERFORM TRANSLATION
+                    val result = performTranslation(query)
+                    emit(result)
+                }
             }
         }
-    }
-
-    // We keep the raw translation separate from the UI state now
-    private val _rawTranslation = MutableStateFlow<List<Pair<String, String>>>(emptyList())
-    private val _fullSentence = MutableStateFlow("")
-    private val _isLoading = MutableStateFlow(false)
-    private val _error = MutableStateFlow<String?>(null)
-
-    // MERGE LOGIC: Combine Raw Translation + Saved Words -> Final UI State
-    val uiState: StateFlow<DictionaryUiState> = combine(
-        _isLoading,
-        _error,
-        _fullSentence,
-        _rawTranslation,
-        storage.savedWordsFlow
-    ) { isLoading, error, fullSentence, rawWords, savedSet ->
-
-        if (isLoading) {
-            DictionaryUiState.Loading
-        } else if (error != null) {
-            DictionaryUiState.Error(error)
-        } else if (rawWords.isEmpty()) {
-            DictionaryUiState.Idle
-        } else {
-            // Check which words are in the savedSet
-            val finalWords = rawWords.map { (original, translation) ->
-                WordResult(
-                    original = original,
-                    translation = translation,
-                    isSaved = savedSet.contains(original) // Check if saved
-                )
+        // C. MERGE WITH SAVED WORDS (So the stars update automatically)
+        .combine(storage.savedWordsFlow) { state, savedSet ->
+            if (state is DictionaryUiState.Success) {
+                // Check which words are saved
+                val updatedWords = state.wordTranslations.map { word ->
+                    word.copy(isSaved = savedSet.contains(word.original))
+                }
+                state.copy(wordTranslations = updatedWords)
+            } else {
+                state
             }
-            DictionaryUiState.Success(fullSentence, finalWords)
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DictionaryUiState.Idle)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DictionaryUiState.Idle)
 
-    private var currentQuery = ""
-
-    fun onQueryChanged(newQuery: String) {
-        currentQuery = newQuery
-    }
-
-    fun toggleSave(word: String) {
-        viewModelScope.launch {
-            storage.toggleWord(word)
+    // 4. SAVED WORDS LIST: Expose saved words with their translations
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val savedWordsList: StateFlow<List<WordResult>> = storage.savedWordsFlow
+        .flatMapLatest { savedSet ->
+            flow {
+                if (savedSet.isEmpty()) {
+                    emit(emptyList())
+                } else {
+                    // Translate all saved words
+                    val wordResults = savedSet.map { word ->
+                        viewModelScope.async {
+                            val translation = repository.translateText(word).getOrDefault("")
+                            WordResult(word, translation, isSaved = true)
+                        }
+                    }.awaitAll()
+                    emit(wordResults)
+                }
+            }
         }
-    }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun translate() {
-        if (currentQuery.isBlank()) return
-        _isLoading.value = true
-        _error.value = null
+    // --- HELPER FUNCTIONS ---
 
-        viewModelScope.launch {
-            val fullResult = repository.translateText(currentQuery)
+    private suspend fun performTranslation(query: String): DictionaryUiState {
+        return try {
+            // 1. Translate Full Sentence
+            val fullResult = repository.translateText(query).getOrDefault("")
 
-            // Regex for Arabic/Unicode letters
-            val uniqueWords = currentQuery.trim()
+            // 2. Split into words (Unicode aware)
+            val uniqueWords = query.trim()
                 .split(Regex("[^\\p{L}]+"))
                 .filter { it.isNotEmpty() }
                 .distinctBy { it.lowercase() }
 
-            val wordTasks = uniqueWords.map { word ->
-                async {
+            // 3. Translate words in parallel
+            val wordResults = uniqueWords.map { word ->
+                viewModelScope.async {
                     val translation = repository.translateText(word).getOrDefault("")
-                    word to translation // Return a simple Pair
+                    WordResult(word, translation, isSaved = false) // isSaved checked later
                 }
-            }
+            }.awaitAll()
 
-            val wordResults = wordTasks.awaitAll()
-
-            fullResult.onSuccess { translatedSentence ->
-                _fullSentence.value = translatedSentence
-                _rawTranslation.value = wordResults
-                _isLoading.value = false
-            }.onFailure { error ->
-                _error.value = error.localizedMessage
-                _isLoading.value = false
-            }
+            DictionaryUiState.Success(fullResult, wordResults)
+        } catch (e: Exception) {
+            DictionaryUiState.Error(e.localizedMessage ?: "Unknown error")
         }
     }
 
-    // State for the Phrase Builder
-    private val _selectedPhrase = MutableStateFlow("")
-    val selectedPhrase = _selectedPhrase.asStateFlow()
+    // Called by UI when user types
+    fun onQueryChanged(newQuery: String) {
+        _searchQuery.value = newQuery
+    }
 
-    private val _phraseTranslation = MutableStateFlow<String?>(null)
-    val phraseTranslation = _phraseTranslation.asStateFlow()
+    // Called by Clipboard Logic
+    fun onClipboardTextFound(text: String) {
+        Log.d("DictionaryViewModel", "onClipboardTextFound called with: $text")
+        Log.d("DictionaryViewModel", "Monitoring enabled: ${_clipboardMonitoringEnabled.value}")
+        Log.d("DictionaryViewModel", "Current search query: ${_searchQuery.value}")
 
-    // NEW: StateFlow to check if the selected phrase is saved
-    val isPhraseSaved: StateFlow<Boolean> = combine(
-        _selectedPhrase,
-        storage.savedWordsFlow
-    ) { selectedPhraseValue, savedSet ->
-        savedSet.contains(selectedPhraseValue) && selectedPhraseValue.isNotBlank()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+        // Only process if monitoring is enabled
+        if (_clipboardMonitoringEnabled.value && text.isNotBlank() && text != _searchQuery.value) {
+            Log.d("DictionaryViewModel", "Setting search query to clipboard text: $text")
+            _searchQuery.value = text
+            // No need to call translate() manually, the flow handles it!
+        } else {
+            Log.d("DictionaryViewModel", "Skipped clipboard text - conditions not met")
+        }
+    }
 
-    // Function to update selection and translate immediately
+    // Toggle clipboard monitoring on/off
+    fun toggleClipboardMonitoring() {
+        _clipboardMonitoringEnabled.value = !_clipboardMonitoringEnabled.value
+    }
+
+    // Called by Star Icon
+    fun toggleSave(word: String) {
+        viewModelScope.launch { storage.toggleWord(word) }
+    }
+
+    // Called by Phrase Builder
     fun onPhraseSelectionChanged(selectedWords: List<String>) {
         if (selectedWords.isEmpty()) {
             _selectedPhrase.value = ""
             _phraseTranslation.value = null
             return
         }
-
-        // Join the words with a space (e.g., "Hot" + "Dog" -> "Hot Dog")
         val combinedPhrase = selectedWords.joinToString(" ")
         _selectedPhrase.value = combinedPhrase
 
-        // Translate this specific chunk
         viewModelScope.launch {
             val result = repository.translateText(combinedPhrase)
-            result.onSuccess {
-                _phraseTranslation.value = it
-            }.onFailure {
-                _phraseTranslation.value = "Error"
-            }
+            _phraseTranslation.value = result.getOrDefault(null)
         }
     }
 

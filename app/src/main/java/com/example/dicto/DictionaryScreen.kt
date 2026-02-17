@@ -17,6 +17,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 
@@ -41,12 +42,15 @@ fun DictionaryScreen(
 fun TranslatorContent(viewModel: DictionaryViewModel) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // Move the local textInput state here
-    var textInput by remember { mutableStateOf("") }
-    // Watch the phrase builder states
+    // IMPORTANT: Binding the text field to the ViewModel
+    val textInput by viewModel.searchQuery.collectAsState()
+
+    // Phrase builder states
     val selectedPhrase by viewModel.selectedPhrase.collectAsState()
     val phraseTranslation by viewModel.phraseTranslation.collectAsState()
-    val isPhraseSaved by viewModel.isPhraseSaved.collectAsState() // NEW: Collect saved status for the phrase
+
+    // Clipboard monitoring state
+    val clipboardMonitoringEnabled by viewModel.clipboardMonitoringEnabled.collectAsState()
 
     Column(
         modifier = Modifier
@@ -54,36 +58,88 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // --- INPUT SECTION ---
-        Text("Arabic -> English Dictionary", style = MaterialTheme.typography.headlineSmall)
+        // Clipboard monitoring indicator with toggle
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = if (clipboardMonitoringEnabled)
+                    MaterialTheme.colorScheme.primaryContainer
+                else
+                    MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.ContentPaste,
+                        contentDescription = "Clipboard monitoring",
+                        tint = if (clipboardMonitoringEnabled)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = if (clipboardMonitoringEnabled)
+                                "Auto-translate from clipboard enabled"
+                            else
+                                "Auto-translate disabled",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (clipboardMonitoringEnabled)
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "Copy text from any app to translate automatically",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Switch(
+                    checked = clipboardMonitoringEnabled,
+                    onCheckedChange = { viewModel.toggleClipboardMonitoring() }
+                )
+            }
+        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = textInput,
             onValueChange = {
-                textInput = it
+                // This updates the ViewModel, which triggers the debounce flow
                 viewModel.onQueryChanged(it)
             },
             label = { Text("أدخل جملة (Enter sentence)") },
             modifier = Modifier.fillMaxWidth(),
-            minLines = 2,
-
-            // --- NEW: FORCE RTL SUPPORT ---
+            // RTL support
             textStyle = TextStyle(
-                textDirection = TextDirection.Rtl, // Forces text to start from the Right
+                textDirection = TextDirection.Rtl,
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize
-            ),
+            )
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Button(
-            onClick = { viewModel.translate() },
-            enabled = uiState !is DictionaryUiState.Loading,
-            modifier = Modifier.align(Alignment.End)
-        ) {
-            Text("Translate")
+        // We don't strictly NEED a button anymore because it's auto-translating.
+        // But if you want a "Clear" button or "Force" button:
+        if (textInput.isNotEmpty()) {
+            Button(
+                onClick = { viewModel.onQueryChanged("") }, // Clear text
+                modifier = Modifier.align(Alignment.End)
+            ) {
+                Text("Clear")
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -125,6 +181,9 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
 
                     // 3. NEW: PHRASE RESULT DISPLAY
                     item {
+                        // Check if the phrase is saved by looking it up in saved words
+                        val isPhraseSaved = state.wordTranslations.any { it.original == selectedPhrase && it.isSaved }
+
                         PhraseResultCard(
                             original = selectedPhrase,
                             translation = phraseTranslation,
