@@ -59,7 +59,11 @@ class DictionaryViewModel : ViewModel() {
 
             // 2. Split sentence into words (removing punctuation like . , ! ?)
             // Regex "\\W+" splits by anything that isn't a word character.
-            val words = currentQuery.trim().split(Regex("\\W+")).filter { it.isNotEmpty() }
+            // Remove duplicates
+            val words = currentQuery.trim()
+                .split(Regex("\\W+"))             // Split by non-word characters
+                .filter { it.isNotEmpty() }       // Remove empty strings
+                .distinctBy { it.lowercase() }    // Removes duplicates (case-insensitive)
 
             // 3. Translate each word in PARALLEL using async/awaitAll
             // This is much faster than doing them one by one!
