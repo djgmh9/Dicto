@@ -11,6 +11,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.TextStyle
 
 @Composable
 fun DictionaryScreen(
@@ -37,9 +39,21 @@ fun DictionaryScreen(
                 textInput = it
                 viewModel.onQueryChanged(it)
             },
-            label = { Text("Enter sentence") },
+            label = {
+                // We can also align the label to the right
+                Text("أدخل جملة (Enter sentence)")
+            },
             modifier = Modifier.fillMaxWidth(),
-            minLines = 2 // Make it a bit taller for sentences
+            minLines = 2,
+
+            // --- NEW: FORCE RTL SUPPORT ---
+            textStyle = TextStyle(
+                textDirection = TextDirection.Rtl, // Forces text to start from the Right
+                fontSize = MaterialTheme.typography.bodyLarge.fontSize
+            ),
+            // Optional: If you want the label to always align right too:
+            // colors = OutlinedTextFieldDefaults.colors(),
+            // but usually just the input text being RTL is enough.
         )
 
         Spacer(modifier = Modifier.height(8.dp))
