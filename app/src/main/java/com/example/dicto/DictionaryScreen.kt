@@ -128,15 +128,24 @@ fun WordRowItem(wordResult: WordResult) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = wordResult.original,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold
-            )
+            // ENGLISH (Left Side): Force LTR
             Text(
                 text = wordResult.translation,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
+                // MERGE: Take bodyLarge AND apply LTR direction
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    textDirection = TextDirection.Ltr
+                )
+            )
+
+            // ARABIC (Right Side): Force RTL
+            Text(
+                text = wordResult.original,
+                // MERGE: Take bodyLarge AND apply Bold AND RTL direction
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    textDirection = TextDirection.Rtl
+                )
             )
         }
     }
