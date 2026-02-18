@@ -21,8 +21,7 @@ class FloatingButtonManager(
     private val onButtonTapped: () -> Unit,
     private val onDragStart: () -> Unit,
     private val onDragMove: (Float, Float) -> Unit,
-    private val onDragEnd: (Float, Float, Boolean) -> Unit,
-    private val onPositionChanged: (Int, Int) -> Unit = { _, _ -> },  // Callback to save position
+    private val onDragEnd: (Float, Float, Int, Int, Boolean) -> Unit,  // Now includes finalX, finalY
     initialX: Int = 0,
     initialY: Int = 100
 ) {
@@ -175,9 +174,9 @@ class FloatingButtonManager(
                     onButtonTapped()
                 } else {
                     AppLogger.debug("FloatingButtonManager", "Drag ended at (${event.rawX}, ${event.rawY})")
-                    // Save the new position
-                    onPositionChanged(params.x, params.y)
-                    onDragEnd(event.rawX, event.rawY, isDragging)
+                    android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonManager ACTION_UP: final position x=${params.x}, y=${params.y}")
+                    // Pass position to service - don't save here, let service decide based on trash
+                    onDragEnd(event.rawX, event.rawY, params.x, params.y, isDragging)
                 }
                 isDragging = false
                 return true

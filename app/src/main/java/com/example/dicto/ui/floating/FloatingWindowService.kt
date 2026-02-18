@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
@@ -102,8 +103,9 @@ class FloatingWindowService : Service() {
                     val savedX = preferencesManager?.floatingButtonX
                     val savedY = preferencesManager?.floatingButtonY
 
-                    savedX?.collect { x ->
-                        savedY?.collect { y ->
+                    // Combine both Flows so we only emit ONCE when both values are ready
+                    if (savedX != null && savedY != null) {
+                        combine(savedX, savedY) { x, y -> Pair(x, y) }.collect { (x, y) ->
                             loadedX = x
                             loadedY = y
                             android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService loaded position from Flow: x=$x, y=$y")
@@ -161,7 +163,6 @@ class FloatingWindowService : Service() {
                 onDragStart = ::onDragStart,
                 onDragMove = ::onDragMove,
                 onDragEnd = ::onDragEnd,
-                onPositionChanged = ::onPositionChanged,
                 initialX = savedX,
                 initialY = savedY
             )
@@ -169,10 +170,7 @@ class FloatingWindowService : Service() {
     }
 
     private fun onPositionChanged(x: Int, y: Int) {
-        serviceScope.launch {
-            preferencesManager?.setFloatingButtonPosition(x, y)
-            AppLogger.debug("FloatingWindowService", "Saved button position: x=$x, y=$y")
-        }
+        // Deprecated - position saving now handled in onDragEnd to avoid saving trash bin positions
     }
 
     private fun onButtonTapped() {
@@ -198,10 +196,21 @@ class FloatingWindowService : Service() {
         trashBinManager?.updateState(x, y)
     }
 
-    private fun onDragEnd(x: Float, y: Float, wasDragging: Boolean) {
+    private fun onDragEnd(x: Float, y: Float, finalX: Int, finalY: Int, wasDragging: Boolean) {
+        android.util.Log.d("DICTO_FLOATING", ">>> onDragEnd called: touchX=$x, touchY=$y, finalX=$finalX, finalY=$finalY, wasDragging=$wasDragging")
+
         if (wasDragging && trashBinManager?.isNear(x, y) == true) {
+            android.util.Log.d("DICTO_FLOATING", ">>> Dropped on trash - NOT saving position, keeping previous location")
             AppLogger.logUserAction("Floating Button", "Dropped on trash - closing")
+            // Don't save position when dropped on trash - button will restore to previous location
             stopSelf()
+        } else if (wasDragging) {
+            android.util.Log.d("DICTO_FLOATING", ">>> Normal drag end - saving position x=$finalX, y=$finalY")
+            // Save position only for normal drag operations (not trash drops)
+            serviceScope.launch {
+                preferencesManager?.setFloatingButtonPosition(finalX, finalY)
+                android.util.Log.d("DICTO_FLOATING", ">>> Position saved: x=$finalX, y=$finalY")
+            }
         }
         trashBinManager?.hide()
     }
