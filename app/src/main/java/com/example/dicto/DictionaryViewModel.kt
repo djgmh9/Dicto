@@ -110,6 +110,7 @@ class DictionaryViewModel(application: Application) : AndroidViewModel(applicati
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DictionaryUiState.Idle)
 
     // 4. SAVED WORDS LIST: Expose saved words with their translations
+    // Shows words in last-added-first order (reversed)
     @OptIn(ExperimentalCoroutinesApi::class)
     val savedWordsList: StateFlow<List<WordResult>> = storage.savedWordsFlow
         .flatMapLatest { savedSet ->
@@ -124,7 +125,8 @@ class DictionaryViewModel(application: Application) : AndroidViewModel(applicati
                             WordResult(word, translation, isSaved = true)
                         }
                     }.awaitAll()
-                    emit(wordResults)
+                    // Reverse to show last-added-first
+                    emit(wordResults.reversed())
                 }
             }
         }
