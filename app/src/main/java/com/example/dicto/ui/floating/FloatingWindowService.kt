@@ -76,7 +76,7 @@ class FloatingWindowService : Service() {
                 setOnClickListener {
                     Log.d("FloatingWindowService", "Floating button clicked")
                     try {
-                        val intent = Intent(this@FloatingWindowService, MainActivity::class.java)
+                        val intent = Intent(this@FloatingWindowService, FloatingTranslatorActivity::class.java)
                         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                         startActivity(intent)
                     } catch (e: Exception) {

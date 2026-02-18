@@ -25,6 +25,15 @@
             </intent-filter>
         </activity>
 
+        <!-- Floating translator overlay activity -->
+        <activity
+            android:name=".ui.floating.FloatingTranslatorActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:noHistory="false" />
+
         <!-- Floating window service for tap-to-translate feature -->
         <service
             android:name=".ui.floating.FloatingWindowService"
