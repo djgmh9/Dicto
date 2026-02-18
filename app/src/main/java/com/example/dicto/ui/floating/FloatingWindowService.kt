@@ -9,6 +9,12 @@ import android.os.Build
 import android.os.IBinder
 import android.view.WindowManager
 import com.example.dicto.utils.AppLogger
+import com.example.dicto.utils.PreferencesManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * FloatingWindowService - Coordinates floating window components
@@ -18,6 +24,7 @@ import com.example.dicto.utils.AppLogger
  * - FloatingButtonManager: Button creation and touch handling
  * - TrashBinManager: Trash bin display and proximity detection
  * - NotificationHelper: Foreground notification management
+ * - PreferencesManager: Position persistence
  */
 class FloatingWindowService : Service() {
 
@@ -26,21 +33,28 @@ class FloatingWindowService : Service() {
     private var trashBinManager: TrashBinManager? = null
     private var notificationHelper: NotificationHelper? = null
     private var restoreReceiver: BroadcastReceiver? = null
+    private var preferencesManager: PreferencesManager? = null
+
+    private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
 
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
+        android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService.onCreate() called")
         AppLogger.logServiceState("FloatingWindowService", "CREATED")
 
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        preferencesManager = PreferencesManager(this)
         notificationHelper = NotificationHelper(this)
         notificationHelper?.createNotificationChannel()
 
         registerRestoreReceiver()
+        android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService.onCreate() completed")
     }
 
+    @Suppress("UnspecifiedRegisterReceiverFlag")
     private fun registerRestoreReceiver() {
         restoreReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
@@ -52,7 +66,7 @@ class FloatingWindowService : Service() {
         }
         val filter = IntentFilter("com.example.dicto.RESTORE_FLOATING_BUTTON")
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (Build.VERSION.SDK_INT >= 33) {  // Android 13+ (TIRAMISU)
             registerReceiver(restoreReceiver, filter, Context.RECEIVER_EXPORTED)
         } else {
             registerReceiver(restoreReceiver, filter)
@@ -60,36 +74,83 @@ class FloatingWindowService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService.onStartCommand() called")
         AppLogger.logServiceState("FloatingWindowService", "STARTED", "Building notification")
 
         try {
             // Start foreground service
             val notification = notificationHelper?.createNotification()
             if (notification != null) {
+                android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService starting foreground")
                 AppLogger.logServiceState("FloatingWindowService", "STARTING_FOREGROUND")
                 startForeground(NotificationHelper.NOTIFICATION_ID, notification)
+                android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService foreground started")
                 AppLogger.logServiceState("FloatingWindowService", "FOREGROUND_ACTIVE", "Notification shown")
             }
 
             // Initialize managers
             if (windowManager != null) {
-                initializeManagers()
+                android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService loading saved position and initializing")
 
-                // Show floating button
-                buttonManager?.show()
-                AppLogger.logServiceState("FloatingWindowService", "WINDOW_CREATED", "Button visible")
+                // Load saved position from preferences SYNCHRONOUSLY
+                var loadedX = 0
+                var loadedY = 100
+                var positionLoaded = false
+
+                // Launch a coroutine to load position
+                serviceScope.launch {
+                    val savedX = preferencesManager?.floatingButtonX
+                    val savedY = preferencesManager?.floatingButtonY
+
+                    savedX?.collect { x ->
+                        savedY?.collect { y ->
+                            loadedX = x
+                            loadedY = y
+                            android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService loaded position from Flow: x=$x, y=$y")
+                            AppLogger.debug("FloatingWindowService", "Loaded saved position: x=$x, y=$y")
+
+                            // NOW initialize managers with loaded position
+                            if (!positionLoaded) {
+                                positionLoaded = true
+                                android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService about to initializeManagers with x=$loadedX, y=$loadedY")
+                                initializeManagers(loadedX, loadedY)
+
+                                // THEN show the button with correct position
+                                android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService calling buttonManager.show() with correct position")
+                                buttonManager?.show()
+                                android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService button shown with position x=$loadedX, y=$loadedY")
+                                AppLogger.logServiceState("FloatingWindowService", "WINDOW_CREATED", "Button visible")
+                            }
+                        }
+                    }
+                }
+
+                // Fallback: if position doesn't load in 500ms, show with defaults
+                android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService scheduled fallback task")
+                serviceScope.launch {
+                    kotlinx.coroutines.delay(500)
+                    if (!positionLoaded) {
+                        android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService FALLBACK: position load timeout, showing with defaults x=0, y=100")
+                        initializeManagers(0, 100)
+                        buttonManager?.show()
+                        android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService button shown with default position (fallback)")
+                        AppLogger.logServiceState("FloatingWindowService", "WINDOW_CREATED", "Button visible (fallback)")
+                    }
+                }
             }
         } catch (e: Exception) {
+            android.util.Log.e("DICTO_FLOATING", ">>> FloatingWindowService.onStartCommand() EXCEPTION: ${e.message}", e)
             AppLogger.logServiceState("FloatingWindowService", "ERROR", e.message ?: "Unknown error")
             AppLogger.error("FloatingWindowService", "Error in onStartCommand", e)
             stopSelf()
         }
 
+        android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService.onStartCommand() returning START_STICKY")
         AppLogger.logServiceState("FloatingWindowService", "STICKY_MODE", "Will restart if killed")
         return START_STICKY
     }
 
-    private fun initializeManagers() {
+    private fun initializeManagers(savedX: Int = 0, savedY: Int = 100) {
         if (buttonManager == null && windowManager != null) {
             trashBinManager = TrashBinManager(this, windowManager!!)
 
@@ -99,8 +160,18 @@ class FloatingWindowService : Service() {
                 onButtonTapped = ::onButtonTapped,
                 onDragStart = ::onDragStart,
                 onDragMove = ::onDragMove,
-                onDragEnd = ::onDragEnd
+                onDragEnd = ::onDragEnd,
+                onPositionChanged = ::onPositionChanged,
+                initialX = savedX,
+                initialY = savedY
             )
+        }
+    }
+
+    private fun onPositionChanged(x: Int, y: Int) {
+        serviceScope.launch {
+            preferencesManager?.setFloatingButtonPosition(x, y)
+            AppLogger.debug("FloatingWindowService", "Saved button position: x=$x, y=$y")
         }
     }
 
@@ -137,23 +208,35 @@ class FloatingWindowService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService.onDestroy() called")
         AppLogger.logServiceState("FloatingWindowService", "DESTROYING")
 
         try {
             // Unregister broadcast receiver
             if (restoreReceiver != null) {
+                android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService unregistering receiver")
                 unregisterReceiver(restoreReceiver)
                 AppLogger.debug("FloatingWindow", "Broadcast receiver unregistered")
             }
 
             // Destroy managers
+            android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService destroying managers")
             trashBinManager?.destroy()
             buttonManager?.destroy()
+            android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService managers destroyed")
         } catch (e: Exception) {
+            android.util.Log.e("DICTO_FLOATING", ">>> FloatingWindowService.onDestroy() ERROR: ${e.message}", e)
             AppLogger.error("FloatingWindowService", "Error removing views", e)
         }
 
-        stopForeground(true)
+        if (Build.VERSION.SDK_INT >= 33) {
+            @Suppress("NewApi")
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        } else {
+            @Suppress("DEPRECATION")
+            stopForeground(true)
+        }
+        android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService.onDestroy() completed")
         AppLogger.logServiceState("FloatingWindowService", "DESTROYED", "Foreground stopped")
     }
 }

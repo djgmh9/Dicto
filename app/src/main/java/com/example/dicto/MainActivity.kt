@@ -1,9 +1,7 @@
 package com.example.dicto
 
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -36,31 +34,64 @@ import com.example.dicto.utils.AppLogger
  * - Log app lifecycle events
  */
 class MainActivity : ComponentActivity() {
+
+    private var floatingWindowManager: FloatingWindowManager? = null
+    private var floatingWindowPreferenceEnabled = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AppLogger.logAppEvent("MainActivity.onCreate", "App starting")
+        android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onCreate - App starting, floatingWindowPreferenceEnabled=$floatingWindowPreferenceEnabled")
+
+        floatingWindowManager = FloatingWindowManager(this)
+
         enableEdgeToEdge()
 
         setContent {
             DictoTheme {
-                MainContent()
+                MainContent { enabled ->
+                    // Callback to receive preference updates from Compose
+                    android.util.Log.d("DICTO_FLOATING", ">>> Preference callback received: enabled=$enabled")
+                    floatingWindowPreferenceEnabled = enabled
+                    android.util.Log.d("DICTO_FLOATING", ">>> Updated floatingWindowPreferenceEnabled to $floatingWindowPreferenceEnabled")
+                }
             }
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onStart - floatingWindowPreferenceEnabled=$floatingWindowPreferenceEnabled")
+    }
+
     override fun onResume() {
         super.onResume()
-        AppLogger.logAppEvent("MainActivity.onResume", "App returned to foreground")
+        android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onResume - App returned to foreground, hiding floating button, floatingWindowPreferenceEnabled=$floatingWindowPreferenceEnabled")
+        // Always hide floating button when inside Dicto
+        floatingWindowManager?.stopFloatingWindow()
+        android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onResume - stopFloatingWindow called")
     }
 
     override fun onPause() {
         super.onPause()
-        AppLogger.logAppEvent("MainActivity.onPause", "App going to background")
+        android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onPause - App going to background, floatingWindowPreferenceEnabled=$floatingWindowPreferenceEnabled")
+        // Show floating button when leaving Dicto - but only if preference is enabled
+        if (floatingWindowPreferenceEnabled) {
+            android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onPause - Preference is ENABLED, calling startFloatingWindow()")
+            floatingWindowManager?.startFloatingWindow()
+            android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onPause - startFloatingWindow called")
+        } else {
+            android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onPause - Preference is DISABLED, NOT showing button")
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onStop - App stopped")
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        AppLogger.logAppEvent("MainActivity.onDestroy", "App being destroyed")
+        android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onDestroy - App being destroyed")
     }
 }
 
@@ -73,9 +104,10 @@ class MainActivity : ComponentActivity() {
  * - Coordinate clipboard monitoring
  * - Delegate to screen content based on selected tab
  * - Request runtime permission for floating window
+ * - Notify parent activity of preference changes
  */
 @Composable
-private fun MainContent() {
+private fun MainContent(onFloatingWindowPreferenceChanged: (Boolean) -> Unit = {}) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val viewModel: DictionaryViewModel = viewModel()
@@ -86,11 +118,18 @@ private fun MainContent() {
     // Observe clipboard monitoring preference
     val clipboardMonitoringEnabled by viewModel.clipboardMonitoringEnabled.collectAsState()
 
-    // Observe floating window preference for app startup restoration
+    // Observe floating window preference
     val floatingWindowEnabled by viewModel.floatingWindowEnabled.collectAsState()
 
     // Floating window manager for restoring state on app launch
     val floatingWindowManager = remember { FloatingWindowManager(context) }
+
+    // Notify MainActivity of preference changes
+    LaunchedEffect(floatingWindowEnabled) {
+        android.util.Log.d("DICTO_FLOATING", ">>> MainContent LaunchedEffect triggered: floatingWindowEnabled=$floatingWindowEnabled")
+        onFloatingWindowPreferenceChanged(floatingWindowEnabled)
+        android.util.Log.d("DICTO_FLOATING", ">>> MainContent callback invoked with enabled=$floatingWindowEnabled")
+    }
 
     // Restore floating window state on app launch with permission check
     LaunchedEffect(Unit) {
@@ -98,20 +137,14 @@ private fun MainContent() {
 
         if (floatingWindowEnabled) {
             // Check if we have permission to draw over other apps
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (Settings.canDrawOverlays(context)) {
-                    // Permission granted, start floating window
-                    AppLogger.logServiceState("FloatingWindow", "STARTING", "Permission granted")
-                    floatingWindowManager.startFloatingWindow()
-                } else {
-                    // Permission not granted, disable the preference
-                    AppLogger.logServiceState("FloatingWindow", "BLOCKED", "Permission denied")
-                    viewModel.toggleFloatingWindow()
-                }
-            } else {
-                // Android versions before M don't require this permission
-                AppLogger.logServiceState("FloatingWindow", "STARTING", "Android < M")
+            if (Settings.canDrawOverlays(context)) {
+                // Permission granted, start floating window
+                AppLogger.logServiceState("FloatingWindow", "STARTING", "Permission granted")
                 floatingWindowManager.startFloatingWindow()
+            } else {
+                // Permission not granted, disable the preference
+                AppLogger.logServiceState("FloatingWindow", "BLOCKED", "Permission denied")
+                viewModel.toggleFloatingWindow()
             }
         } else {
             AppLogger.logServiceState("FloatingWindow", "DISABLED", "Preference is off")

@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.dicto.DictionaryViewModel
-import com.example.dicto.domain.FloatingWindowManager
 import com.example.dicto.utils.AppLogger
 import com.example.dicto.utils.PermissionHelper
 
@@ -28,16 +27,12 @@ fun SettingsContent(viewModel: DictionaryViewModel) {
     val clipboardMonitoringEnabled by viewModel.clipboardMonitoringEnabled.collectAsState()
     val floatingWindowEnabled by viewModel.floatingWindowEnabled.collectAsState()
 
-    val floatingWindowManager = remember { FloatingWindowManager(context) }
+    // Log the current state when composing
+    android.util.Log.d("DICTO_FLOATING", ">>> SettingsContent recomposed: floatingWindowEnabled=$floatingWindowEnabled")
 
-    // Sync floating window service state with preference
-    LaunchedEffect(floatingWindowEnabled) {
-        if (floatingWindowEnabled && PermissionHelper.canDrawOverlays(context)) {
-            floatingWindowManager.startFloatingWindow()
-        } else if (!floatingWindowEnabled) {
-            floatingWindowManager.stopFloatingWindow()
-        }
-    }
+    // Note: Do NOT control FloatingWindowService here
+    // MainActivity.onPause() and onResume() handle all service lifecycle
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -127,24 +122,31 @@ fun SettingsContent(viewModel: DictionaryViewModel) {
                             Switch(
                                 checked = floatingWindowEnabled,
                                 onCheckedChange = {
+                                    android.util.Log.d("DICTO_FLOATING", ">>> Settings toggle clicked: floatingWindowEnabled=$floatingWindowEnabled, new state will be $!$floatingWindowEnabled")
                                     if (!floatingWindowEnabled) {
                                         // User wants to enable - check permission first
+                                        android.util.Log.d("DICTO_FLOATING", ">>> User wants to ENABLE floating translator")
                                         AppLogger.logUserAction("Floating Translator Toggle", "Toggling ON")
                                         if (PermissionHelper.canDrawOverlays(context)) {
-                                            // Permission granted, toggle ON and start service
+                                            // Permission granted, toggle preference only
+                                            android.util.Log.d("DICTO_FLOATING", ">>> Permission granted, calling toggleFloatingWindow()")
                                             AppLogger.logServiceState("FloatingWindow", "PERMISSION_GRANTED")
                                             viewModel.toggleFloatingWindow()
-                                            floatingWindowManager.startFloatingWindow()
+                                            android.util.Log.d("DICTO_FLOATING", ">>> toggleFloatingWindow() called, waiting for MainActivity.onPause()")
+                                            // MainActivity.onPause() will handle starting service
                                         } else {
                                             // Permission not granted, open settings to request
+                                            android.util.Log.d("DICTO_FLOATING", ">>> Permission NOT granted, requesting permission")
                                             AppLogger.logUserAction("Floating Translator", "Permission not granted, opening settings")
                                             PermissionHelper.requestOverlayPermission(context)
                                         }
                                     } else {
-                                        // User wants to disable - toggle OFF and stop service
+                                        // User wants to disable - toggle preference only
+                                        android.util.Log.d("DICTO_FLOATING", ">>> User wants to DISABLE floating translator")
                                         AppLogger.logUserAction("Floating Translator Toggle", "Toggling OFF")
                                         viewModel.toggleFloatingWindow()
-                                        floatingWindowManager.stopFloatingWindow()
+                                        android.util.Log.d("DICTO_FLOATING", ">>> toggleFloatingWindow() called for disabling")
+                                        // MainActivity.onPause() will handle stopping service
                                     }
                                 }
                             )

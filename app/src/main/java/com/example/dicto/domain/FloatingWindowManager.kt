@@ -26,10 +26,13 @@ class FloatingWindowManager(private val context: Context) {
      */
     fun startFloatingWindow() {
         try {
+            android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowManager.startFloatingWindow() called")
             val intent = Intent(context, FloatingWindowService::class.java)
             context.startService(intent)
+            android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowManager.startFloatingWindow() - Intent sent to start service")
             Log.d("FloatingWindowManager", "Floating window service started")
         } catch (e: Exception) {
+            android.util.Log.e("DICTO_FLOATING", ">>> FloatingWindowManager.startFloatingWindow() ERROR: ${e.message}")
             Log.e("FloatingWindowManager", "Error starting floating window: ${e.message}")
         }
     }
@@ -39,10 +42,13 @@ class FloatingWindowManager(private val context: Context) {
      */
     fun stopFloatingWindow() {
         try {
+            android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowManager.stopFloatingWindow() called")
             val intent = Intent(context, FloatingWindowService::class.java)
             context.stopService(intent)
+            android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowManager.stopFloatingWindow() - Service stopped")
             Log.d("FloatingWindowManager", "Floating window service stopped")
         } catch (e: Exception) {
+            android.util.Log.e("DICTO_FLOATING", ">>> FloatingWindowManager.stopFloatingWindow() ERROR: ${e.message}")
             Log.e("FloatingWindowManager", "Error stopping floating window: ${e.message}")
         }
     }
@@ -51,6 +57,7 @@ class FloatingWindowManager(private val context: Context) {
      * Toggle floating window on/off
      */
     fun toggleFloatingWindow(shouldShow: Boolean) {
+        android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowManager.toggleFloatingWindow(shouldShow=$shouldShow)")
         if (shouldShow) {
             startFloatingWindow()
         } else {

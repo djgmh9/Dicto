@@ -21,7 +21,10 @@ class FloatingButtonManager(
     private val onButtonTapped: () -> Unit,
     private val onDragStart: () -> Unit,
     private val onDragMove: (Float, Float) -> Unit,
-    private val onDragEnd: (Float, Float, Boolean) -> Unit
+    private val onDragEnd: (Float, Float, Boolean) -> Unit,
+    private val onPositionChanged: (Int, Int) -> Unit = { _, _ -> },  // Callback to save position
+    initialX: Int = 0,
+    initialY: Int = 100
 ) {
     private var floatingView: ImageView? = null
     private var layoutParams: WindowManager.LayoutParams? = null
@@ -30,6 +33,10 @@ class FloatingButtonManager(
     private var initialTouchX = 0f
     private var initialTouchY = 0f
     private var isDragging = false
+
+    // Store initial position for position persistence
+    private val savedInitialX = initialX
+    private val savedInitialY = initialY
 
     companion object {
         private const val BUTTON_SIZE = 150
@@ -115,8 +122,8 @@ class FloatingButtonManager(
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         ).apply {
-            x = 0
-            y = 100
+            x = savedInitialX
+            y = savedInitialY
             width = BUTTON_SIZE
             height = BUTTON_SIZE
         }
@@ -168,6 +175,8 @@ class FloatingButtonManager(
                     onButtonTapped()
                 } else {
                     AppLogger.debug("FloatingButtonManager", "Drag ended at (${event.rawX}, ${event.rawY})")
+                    // Save the new position
+                    onPositionChanged(params.x, params.y)
                     onDragEnd(event.rawX, event.rawY, isDragging)
                 }
                 isDragging = false

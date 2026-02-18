@@ -3,6 +3,7 @@ package com.example.dicto.utils
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.map
  * Currently manages:
  * - clipboardMonitoringEnabled: Auto-translate from clipboard setting
  * - floatingWindowEnabled: Floating translator toggle
+ * - floatingButtonX/Y: Button position persistence
  */
 
 private val Context.preferencesDataStore by preferencesDataStore(name = "app_preferences")
@@ -29,10 +31,14 @@ class PreferencesManager(private val context: Context) {
         // Preference keys
         private val CLIPBOARD_MONITORING_KEY = booleanPreferencesKey("clipboard_monitoring_enabled")
         private val FLOATING_WINDOW_KEY = booleanPreferencesKey("floating_window_enabled")
+        private val FLOATING_BUTTON_X_KEY = intPreferencesKey("floating_button_x")
+        private val FLOATING_BUTTON_Y_KEY = intPreferencesKey("floating_button_y")
 
         // Default values
         private const val DEFAULT_CLIPBOARD_MONITORING = true
         private const val DEFAULT_FLOATING_WINDOW = false
+        private const val DEFAULT_BUTTON_X = 0
+        private const val DEFAULT_BUTTON_Y = 100
     }
 
     /**
@@ -51,6 +57,22 @@ class PreferencesManager(private val context: Context) {
     val floatingWindowEnabled: Flow<Boolean> = context.preferencesDataStore.data
         .map { preferences ->
             preferences[FLOATING_WINDOW_KEY] ?: DEFAULT_FLOATING_WINDOW
+        }
+
+    /**
+     * Observable floating button X position
+     */
+    val floatingButtonX: Flow<Int> = context.preferencesDataStore.data
+        .map { preferences ->
+            preferences[FLOATING_BUTTON_X_KEY] ?: DEFAULT_BUTTON_X
+        }
+
+    /**
+     * Observable floating button Y position
+     */
+    val floatingButtonY: Flow<Int> = context.preferencesDataStore.data
+        .map { preferences ->
+            preferences[FLOATING_BUTTON_Y_KEY] ?: DEFAULT_BUTTON_Y
         }
 
     /**
@@ -74,5 +96,17 @@ class PreferencesManager(private val context: Context) {
             preferences[FLOATING_WINDOW_KEY] = enabled
         }
     }
-}
 
+    /**
+     * Save floating button position
+     *
+     * @param x X coordinate of button
+     * @param y Y coordinate of button
+     */
+    suspend fun setFloatingButtonPosition(x: Int, y: Int) {
+        context.preferencesDataStore.edit { preferences ->
+            preferences[FLOATING_BUTTON_X_KEY] = x
+            preferences[FLOATING_BUTTON_Y_KEY] = y
+        }
+    }
+}
