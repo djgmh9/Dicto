@@ -17,11 +17,16 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
-import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 
-// DictionaryScreen now takes selectedTab as a parameter
+/**
+ * DictionaryScreen - Main container for navigation between tabs
+ *
+ * Follows separation of concerns:
+ * - Handles tab navigation
+ * - Delegates to specific content screens
+ */
 @Composable
 fun DictionaryScreen(
     modifier: Modifier = Modifier,
@@ -30,10 +35,9 @@ fun DictionaryScreen(
 ) {
     // Content is now switched based on the selectedTab passed from MainActivity
     Box(modifier = modifier.fillMaxSize()) {
-        if (selectedTab == 0) {
-            TranslatorContent(viewModel)
-        } else {
-            SavedWordsContent(viewModel)
+        when (selectedTab) {
+            0 -> TranslatorContent(viewModel)
+            1 -> SavedWordsContent(viewModel)
         }
     }
 }
@@ -49,71 +53,12 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
     val selectedPhrase by viewModel.selectedPhrase.collectAsState()
     val phraseTranslation by viewModel.phraseTranslation.collectAsState()
 
-    // Clipboard monitoring state
-    val clipboardMonitoringEnabled by viewModel.clipboardMonitoringEnabled.collectAsState()
-
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Clipboard monitoring indicator with toggle
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = if (clipboardMonitoringEnabled)
-                    MaterialTheme.colorScheme.primaryContainer
-                else
-                    MaterialTheme.colorScheme.surfaceVariant
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.ContentPaste,
-                        contentDescription = "Clipboard monitoring",
-                        tint = if (clipboardMonitoringEnabled)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text(
-                            text = if (clipboardMonitoringEnabled)
-                                "Auto-translate from clipboard enabled"
-                            else
-                                "Auto-translate disabled",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = if (clipboardMonitoringEnabled)
-                                MaterialTheme.colorScheme.onPrimaryContainer
-                            else
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "Copy text from any app to translate automatically",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Switch(
-                    checked = clipboardMonitoringEnabled,
-                    onCheckedChange = { viewModel.toggleClipboardMonitoring() }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
         OutlinedTextField(
             value = textInput,
             onValueChange = {
@@ -131,8 +76,7 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // We don't strictly NEED a button anymore because it's auto-translating.
-        // But if you want a "Clear" button or "Force" button:
+        // Clear button
         if (textInput.isNotEmpty()) {
             Button(
                 onClick = { viewModel.onQueryChanged("") }, // Clear text
@@ -161,14 +105,14 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // 1. Full Sentence Result (Existing)
+                    // 1. Full Sentence Result
                     item {
                         Text("Full Translation:", style = MaterialTheme.typography.labelLarge)
                         Text(state.fullTranslation, style = MaterialTheme.typography.headlineSmall)
                         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
                     }
 
-                    // 2. NEW: PHRASE BUILDER SECTION
+                    // 2. PHRASE BUILDER SECTION
                     item {
                         // Extract just the original words list from the result
                         val originalWords = state.wordTranslations.map { it.original }
@@ -179,7 +123,7 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
                         )
                     }
 
-                    // 3. NEW: PHRASE RESULT DISPLAY
+                    // 3. PHRASE RESULT DISPLAY
                     item {
                         // Check if the phrase is saved by looking it up in saved words
                         val isPhraseSaved = state.wordTranslations.any { it.original == selectedPhrase && it.isSaved }
@@ -187,8 +131,8 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
                         PhraseResultCard(
                             original = selectedPhrase,
                             translation = phraseTranslation,
-                            isSaved = isPhraseSaved, // UPDATED: Pass the new saved status
-                            onSave = { viewModel.toggleSave(selectedPhrase) } // You can save phrases too!
+                            isSaved = isPhraseSaved,
+                            onSave = { viewModel.toggleSave(selectedPhrase) }
                         )
                     }
 
@@ -197,7 +141,7 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
                         Text("Word by Word:", style = MaterialTheme.typography.labelLarge)
                     }
 
-                    // 4. Individual Words (Existing)
+                    // 4. Individual Words
                     items(state.wordTranslations) { wordItem ->
                         WordRowItem(
                             wordResult = wordItem,
