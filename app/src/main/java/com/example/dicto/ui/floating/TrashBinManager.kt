@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.os.Build
+import android.view.Gravity
 import android.view.WindowManager
 import android.widget.ImageView
 import com.example.dicto.utils.AppLogger
@@ -39,8 +40,6 @@ class TrashBinManager(
         try {
             val screenWidth = windowManager.defaultDisplay?.width ?: 1080
             val screenHeight = windowManager.defaultDisplay?.height ?: 1920
-            val trashCenterX = (screenWidth - TRASH_SIZE) / 2
-            val trashY = screenHeight - TRASH_SIZE - TRASH_BOTTOM_PADDING
 
             trashView = ImageView(context).apply {
                 setBackgroundColor(Color.parseColor("#FF0000"))
@@ -59,14 +58,14 @@ class TrashBinManager(
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT
             ).apply {
-                x = trashCenterX
-                y = trashY
+                gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+                y = TRASH_BOTTOM_PADDING  // Offset from bottom
                 width = TRASH_SIZE
                 height = TRASH_SIZE
             }
 
             windowManager.addView(trashView, trashParams)
-            AppLogger.debug("TrashBinManager", "Trash bin shown at x=$trashCenterX, y=$trashY (screen: ${screenWidth}x${screenHeight})")
+            AppLogger.debug("TrashBinManager", "Trash bin shown at bottom center (screen: ${screenWidth}x${screenHeight})")
         } catch (e: Exception) {
             AppLogger.error("TrashBinManager", "Error showing trash bin", e)
         }
@@ -108,9 +107,12 @@ class TrashBinManager(
         val screenWidth = windowManager.defaultDisplay?.width ?: 1080
         val screenHeight = windowManager.defaultDisplay?.height ?: 1920
 
-        // Calculate center of trash bin (same as show() method)
-        val trashCenterX = (screenWidth - TRASH_SIZE) / 2 + (TRASH_SIZE / 2).toFloat()
-        val trashCenterY = (screenHeight - TRASH_SIZE - TRASH_BOTTOM_PADDING) + (TRASH_SIZE / 2).toFloat()
+        // Calculate center of trash bin - matches gravity positioning
+        // Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL means:
+        // - X: screen center
+        // - Y: screen height - TRASH_BOTTOM_PADDING - (TRASH_SIZE / 2)
+        val trashCenterX = (screenWidth / 2).toFloat()
+        val trashCenterY = (screenHeight - TRASH_BOTTOM_PADDING - (TRASH_SIZE / 2)).toFloat()
 
         val distance = Math.sqrt(
             Math.pow((x - trashCenterX).toDouble(), 2.0) +
