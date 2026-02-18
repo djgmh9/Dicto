@@ -14,7 +14,6 @@ import android.view.MotionEvent
 import android.view.WindowManager
 import android.widget.ImageView
 import androidx.core.app.NotificationCompat
-import com.example.dicto.R
 
 /**
  * FloatingWindowService - Displays a draggable floating translation button
@@ -53,18 +52,18 @@ class FloatingWindowService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("FloatingWindowService", "Service started")
 
-        // Create and show notification for foreground service
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Dicto Translator")
-            .setContentText("Floating translator is active")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
-            .build()
-
-        startForeground(NOTIFICATION_ID, notification)
-
         try {
+            // Create and show notification for foreground service
+            val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Dicto Translator")
+                .setContentText("Floating translator is active")
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setOngoing(true)
+                .build()
+
+            startForeground(NOTIFICATION_ID, notification)
+
             windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
             createFloatingWindow()
         } catch (e: Exception) {
