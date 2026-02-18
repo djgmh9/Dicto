@@ -27,10 +27,6 @@ class DictionaryViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         mockApplication = mockk(relaxed = true)
-
-        // Mock application context for storage
-        every { mockApplication.applicationContext } returns mockApplication
-
         viewModel = DictionaryViewModel(mockApplication)
     }
 
@@ -45,76 +41,68 @@ class DictionaryViewModelTest {
     // ========================================
 
     @Test
-    fun `onQueryChanged updates search query`() {
-        runTest {
-            // When
-            viewModel.onQueryChanged("hello")
-            advanceUntilIdle()
+    fun `onQueryChanged updates search query`() = runTest(testDispatcher) {
+        // When
+        viewModel.onQueryChanged("hello")
+        advanceUntilIdle()
 
-            // Then
-            assertEquals("hello", viewModel.searchQuery.value)
+        // Then
+        assertEquals("hello", viewModel.searchQuery.value)
+    }
+
+    @Test
+    fun `empty query returns Idle state`() = runTest(testDispatcher) {
+        viewModel.uiState.test {
+            // Initial state
+            assertEquals(DictionaryUiState.Idle, awaitItem())
+
+            // Set empty query
+            viewModel.onQueryChanged("")
+            advanceTimeBy(700) // Past debounce
+
+            // Should remain Idle
+            expectNoEvents()
         }
     }
 
     @Test
-    fun `empty query returns Idle state`() {
-        runTest {
-            viewModel.uiState.test {
-                // Initial state
-                assertEquals(DictionaryUiState.Idle, awaitItem())
+    fun `blank query returns Idle state`() = runTest(testDispatcher) {
+        viewModel.uiState.test {
+            assertEquals(DictionaryUiState.Idle, awaitItem())
 
-                // Set empty query
-                viewModel.onQueryChanged("")
-                advanceTimeBy(700) // Past debounce
+            viewModel.onQueryChanged("   ")
+            advanceTimeBy(700)
 
-                // Should remain Idle
-                expectNoEvents()
-            }
+            expectNoEvents()
         }
     }
 
     @Test
-    fun `blank query returns Idle state`() {
-        runTest {
-            viewModel.uiState.test {
-                assertEquals(DictionaryUiState.Idle, awaitItem())
+    fun `search query is debounced for 600ms`() = runTest(testDispatcher) {
+        viewModel.uiState.test {
+            skipItems(1) // Skip initial Idle
 
-                viewModel.onQueryChanged("   ")
-                advanceTimeBy(700)
+            // Type multiple characters quickly
+            viewModel.onQueryChanged("h")
+            advanceTimeBy(100)
 
-                expectNoEvents()
-            }
-        }
-    }
+            viewModel.onQueryChanged("he")
+            advanceTimeBy(100)
 
-    @Test
-    fun `search query is debounced for 600ms`() {
-        runTest {
-            viewModel.uiState.test {
-                skipItems(1) // Skip initial Idle
+            viewModel.onQueryChanged("hel")
+            advanceTimeBy(100)
 
-                // Type multiple characters quickly
-                viewModel.onQueryChanged("h")
-                advanceTimeBy(100)
+            // No emission yet (less than 600ms)
+            expectNoEvents()
 
-                viewModel.onQueryChanged("he")
-                advanceTimeBy(100)
+            // After 600ms total debounce
+            advanceTimeBy(400)
 
-                viewModel.onQueryChanged("hel")
-                advanceTimeBy(100)
+            // Should now emit Loading then Success/Error
+            assertEquals(DictionaryUiState.Loading, awaitItem())
 
-                // No emission yet (less than 600ms)
-                expectNoEvents()
-
-                // After 600ms total debounce
-                advanceTimeBy(400)
-
-                // Should now emit Loading then Success/Error
-                assertEquals(DictionaryUiState.Loading, awaitItem())
-
-                // Skip the result (Success or Error depending on translation API)
-                cancelAndIgnoreRemainingEvents()
-            }
+            // Skip the result (Success or Error depending on translation API)
+            cancelAndIgnoreRemainingEvents()
         }
     }
 
@@ -123,74 +111,62 @@ class DictionaryViewModelTest {
     // ========================================
 
     @Test
-    fun `clipboard monitoring is enabled by default`() {
-        runTest {
-            assertTrue(viewModel.clipboardMonitoringEnabled.value)
-        }
+    fun `clipboard monitoring is enabled by default`() = runTest(testDispatcher) {
+        assertTrue(viewModel.clipboardMonitoringEnabled.value)
     }
 
     @Test
-    fun `toggleClipboardMonitoring changes state`() {
-        runTest {
-            // Initially enabled
-            assertTrue(viewModel.clipboardMonitoringEnabled.value)
+    fun `toggleClipboardMonitoring changes state`() = runTest(testDispatcher) {
+        // Initially enabled
+        assertTrue(viewModel.clipboardMonitoringEnabled.value)
 
-            // Toggle off
-            viewModel.toggleClipboardMonitoring()
-            assertFalse(viewModel.clipboardMonitoringEnabled.value)
+        // Toggle off
+        viewModel.toggleClipboardMonitoring()
+        assertFalse(viewModel.clipboardMonitoringEnabled.value)
 
-            // Toggle on
-            viewModel.toggleClipboardMonitoring()
-            assertTrue(viewModel.clipboardMonitoringEnabled.value)
-        }
+        // Toggle on
+        viewModel.toggleClipboardMonitoring()
+        assertTrue(viewModel.clipboardMonitoringEnabled.value)
     }
 
     @Test
-    fun `onClipboardTextFound updates query when monitoring enabled`() {
-        runTest {
-            viewModel.onClipboardTextFound("clipboard text")
-            advanceUntilIdle()
+    fun `onClipboardTextFound updates query when monitoring enabled`() = runTest(testDispatcher) {
+        viewModel.onClipboardTextFound("clipboard text")
+        advanceUntilIdle()
 
-            assertEquals("clipboard text", viewModel.searchQuery.value)
-        }
+        assertEquals("clipboard text", viewModel.searchQuery.value)
     }
 
     @Test
-    fun `onClipboardTextFound ignores when monitoring disabled`() {
-        runTest {
-            viewModel.toggleClipboardMonitoring() // Disable
-            viewModel.onClipboardTextFound("clipboard text")
-            advanceUntilIdle()
+    fun `onClipboardTextFound ignores when monitoring disabled`() = runTest(testDispatcher) {
+        viewModel.toggleClipboardMonitoring() // Disable
+        viewModel.onClipboardTextFound("clipboard text")
+        advanceUntilIdle()
 
-            assertEquals("", viewModel.searchQuery.value)
-        }
+        assertEquals("", viewModel.searchQuery.value)
     }
 
     @Test
-    fun `onClipboardTextFound ignores blank text`() {
-        runTest {
-            viewModel.onClipboardTextFound("   ")
-            advanceUntilIdle()
+    fun `onClipboardTextFound ignores blank text`() = runTest(testDispatcher) {
+        viewModel.onClipboardTextFound("   ")
+        advanceUntilIdle()
 
-            assertEquals("", viewModel.searchQuery.value)
-        }
+        assertEquals("", viewModel.searchQuery.value)
     }
 
     @Test
-    fun `onClipboardTextFound ignores duplicate text`() {
-        runTest {
-            // Set initial query
-            viewModel.onQueryChanged("same text")
-            advanceUntilIdle()
+    fun `onClipboardTextFound ignores duplicate text`() = runTest(testDispatcher) {
+        // Set initial query
+        viewModel.onQueryChanged("same text")
+        advanceUntilIdle()
 
-            // Try to set same text from clipboard
-            val initialValue = viewModel.searchQuery.value
-            viewModel.onClipboardTextFound("same text")
-            advanceUntilIdle()
+        // Try to set same text from clipboard
+        val initialValue = viewModel.searchQuery.value
+        viewModel.onClipboardTextFound("same text")
+        advanceUntilIdle()
 
-            // Should not trigger new query
-            assertEquals(initialValue, viewModel.searchQuery.value)
-        }
+        // Should not trigger new query
+        assertEquals(initialValue, viewModel.searchQuery.value)
     }
 
     // ========================================
@@ -198,39 +174,33 @@ class DictionaryViewModelTest {
     // ========================================
 
     @Test
-    fun `onPhraseSelectionChanged with empty list clears phrase`() {
-        runTest {
-            viewModel.onPhraseSelectionChanged(emptyList())
-            advanceUntilIdle()
+    fun `onPhraseSelectionChanged with empty list clears phrase`() = runTest(testDispatcher) {
+        viewModel.onPhraseSelectionChanged(emptyList())
+        advanceUntilIdle()
 
-            assertEquals("", viewModel.selectedPhrase.value)
-            assertEquals(null, viewModel.phraseTranslation.value)
-        }
+        assertEquals("", viewModel.selectedPhrase.value)
+        assertEquals(null, viewModel.phraseTranslation.value)
     }
 
     @Test
-    fun `onPhraseSelectionChanged joins words with space`() {
-        runTest {
-            viewModel.onPhraseSelectionChanged(listOf("hello", "world"))
-            advanceUntilIdle()
+    fun `onPhraseSelectionChanged joins words with space`() = runTest(testDispatcher) {
+        viewModel.onPhraseSelectionChanged(listOf("hello", "world"))
+        advanceUntilIdle()
 
-            assertEquals("hello world", viewModel.selectedPhrase.value)
-        }
+        assertEquals("hello world", viewModel.selectedPhrase.value)
     }
 
     @Test
-    fun `onPhraseSelectionChanged triggers translation`() {
-        runTest {
-            viewModel.phraseTranslation.test {
-                skipItems(1) // Skip initial null
+    fun `onPhraseSelectionChanged triggers translation`() = runTest(testDispatcher) {
+        viewModel.phraseTranslation.test {
+            skipItems(1) // Skip initial null
 
-                viewModel.onPhraseSelectionChanged(listOf("test", "phrase"))
-                advanceUntilIdle()
+            viewModel.onPhraseSelectionChanged(listOf("test", "phrase"))
+            advanceUntilIdle()
 
-                // Should have a translation (might be empty string if API fails)
-                val translation = awaitItem()
-                assertTrue(translation != null)
-            }
+            // Should have a translation (might be empty string if API fails)
+            val translation = awaitItem()
+            assertTrue(translation != null)
         }
     }
 
@@ -239,12 +209,10 @@ class DictionaryViewModelTest {
     // ========================================
 
     @Test
-    fun `toggleSave is called without exceptions`() {
-        runTest {
-            // Should not throw
-            viewModel.toggleSave("test word")
-            advanceUntilIdle()
-        }
+    fun `toggleSave is called without exceptions`() = runTest(testDispatcher) {
+        // Should not throw
+        viewModel.toggleSave("test word")
+        advanceUntilIdle()
     }
 
     // ========================================
@@ -252,63 +220,57 @@ class DictionaryViewModelTest {
     // ========================================
 
     @Test
-    fun `uiState emits Loading before translation`() {
-        runTest {
-            viewModel.uiState.test {
-                skipItems(1) // Skip initial Idle
+    fun `uiState emits Loading before translation`() = runTest(testDispatcher) {
+        viewModel.uiState.test {
+            skipItems(1) // Skip initial Idle
 
-                viewModel.onQueryChanged("test")
-                advanceTimeBy(700) // Past debounce
+            viewModel.onQueryChanged("test")
+            advanceTimeBy(700) // Past debounce
 
-                // Should emit Loading
-                assertEquals(DictionaryUiState.Loading, awaitItem())
+            // Should emit Loading
+            assertEquals(DictionaryUiState.Loading, awaitItem())
 
-                cancelAndIgnoreRemainingEvents()
-            }
+            cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `multiple queries cancel previous translation`() {
-        runTest {
-            viewModel.uiState.test {
-                skipItems(1) // Skip initial Idle
+    fun `multiple queries cancel previous translation`() = runTest(testDispatcher) {
+        viewModel.uiState.test {
+            skipItems(1) // Skip initial Idle
 
-                // First query
-                viewModel.onQueryChanged("first")
-                advanceTimeBy(700)
-                skipItems(1) // Skip Loading
+            // First query
+            viewModel.onQueryChanged("first")
+            advanceTimeBy(700)
+            skipItems(1) // Skip Loading
 
-                // Second query before first completes
-                viewModel.onQueryChanged("second")
-                advanceTimeBy(700)
+            // Second query before first completes
+            viewModel.onQueryChanged("second")
+            advanceTimeBy(700)
 
-                // Should show Loading for second query
-                assertEquals(DictionaryUiState.Loading, awaitItem())
+            // Should show Loading for second query
+            assertEquals(DictionaryUiState.Loading, awaitItem())
 
-                cancelAndIgnoreRemainingEvents()
-            }
+            cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `clearing query returns to Idle state`() {
-        runTest {
-            viewModel.uiState.test {
-                skipItems(1) // Skip initial Idle
+    fun `clearing query returns to Idle state`() = runTest(testDispatcher) {
+        viewModel.uiState.test {
+            skipItems(1) // Skip initial Idle
 
-                // Set query
-                viewModel.onQueryChanged("test")
-                advanceTimeBy(700)
-                skipItems(2) // Skip Loading and result
+            // Set query
+            viewModel.onQueryChanged("test")
+            advanceTimeBy(700)
+            skipItems(2) // Skip Loading and result
 
-                // Clear query
-                viewModel.onQueryChanged("")
-                advanceTimeBy(700)
+            // Clear query
+            viewModel.onQueryChanged("")
+            advanceTimeBy(700)
 
-                // Should return to Idle
-                assertEquals(DictionaryUiState.Idle, awaitItem())
-            }
+            // Should return to Idle
+            assertEquals(DictionaryUiState.Idle, awaitItem())
         }
     }
 }

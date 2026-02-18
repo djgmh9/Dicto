@@ -70,7 +70,7 @@ class ClipboardMonitoringIntegrationTest {
         assertNotNull(item)
 
         // Should be able to coerce to text
-        val coercedText = item.coerceToText(context).toString()
+        val coercedText = item?.coerceToText(context).toString()
         assertTrue(coercedText.isNotBlank())
     }
 
@@ -102,9 +102,9 @@ class ClipboardMonitoringIntegrationTest {
         val primaryClip = clipboardManager.primaryClip
         assertNotNull(primaryClip)
         assertEquals(3, primaryClip?.itemCount ?: )
-        assertEquals("First item", primaryClip?.getItemAt(0).text.toString())
-        assertEquals("Second item", primaryClip.getItemAt(1).text.toString())
-        assertEquals("Third item", primaryClip.getItemAt(2).text.toString())
+        assertEquals("First item", primaryClip?.getItemAt(0)?.text.toString())
+        assertEquals("Second item", primaryClip?.getItemAt(1)?.text.toString())
+        assertEquals("Third item", primaryClip?.getItemAt(2)?.text.toString())
     }
 
     @Test
@@ -118,7 +118,7 @@ class ClipboardMonitoringIntegrationTest {
         // Then
         val description = clipboardManager.primaryClipDescription
         assertNotNull(description)
-        assertTrue(description.hasMimeType("text/plain"))
+        assertTrue(description?.hasMimeType("text/plain") ?: )
     }
 
     @Test
