@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.map
  *
  * Currently manages:
  * - clipboardMonitoringEnabled: Auto-translate from clipboard setting
+ * - floatingWindowEnabled: Floating translator toggle
  */
 
 private val Context.preferencesDataStore by preferencesDataStore(name = "app_preferences")
@@ -27,9 +28,11 @@ class PreferencesManager(private val context: Context) {
     companion object {
         // Preference keys
         private val CLIPBOARD_MONITORING_KEY = booleanPreferencesKey("clipboard_monitoring_enabled")
+        private val FLOATING_WINDOW_KEY = booleanPreferencesKey("floating_window_enabled")
 
         // Default values
         private const val DEFAULT_CLIPBOARD_MONITORING = true
+        private const val DEFAULT_FLOATING_WINDOW = false
     }
 
     /**
@@ -42,6 +45,15 @@ class PreferencesManager(private val context: Context) {
         }
 
     /**
+     * Observable floating window preference
+     * Emits saved value on subscribe, then any changes
+     */
+    val floatingWindowEnabled: Flow<Boolean> = context.preferencesDataStore.data
+        .map { preferences ->
+            preferences[FLOATING_WINDOW_KEY] ?: DEFAULT_FLOATING_WINDOW
+        }
+
+    /**
      * Save clipboard monitoring preference
      *
      * @param enabled Whether clipboard monitoring should be enabled
@@ -49,6 +61,17 @@ class PreferencesManager(private val context: Context) {
     suspend fun setClipboardMonitoringEnabled(enabled: Boolean) {
         context.preferencesDataStore.edit { preferences ->
             preferences[CLIPBOARD_MONITORING_KEY] = enabled
+        }
+    }
+
+    /**
+     * Save floating window preference
+     *
+     * @param enabled Whether floating window should be enabled
+     */
+    suspend fun setFloatingWindowEnabled(enabled: Boolean) {
+        context.preferencesDataStore.edit { preferences ->
+            preferences[FLOATING_WINDOW_KEY] = enabled
         }
     }
 }

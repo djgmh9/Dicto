@@ -3,25 +3,32 @@ package com.example.dicto.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.dicto.DictionaryViewModel
+import com.example.dicto.domain.FloatingWindowManager
+import com.example.dicto.utils.PermissionHelper
 
 /**
  * SettingsContent - Displays application settings as a tab
  *
  * Responsibilities:
  * - Clipboard monitoring toggle
+ * - Floating window toggle
  * - About information
  * - All settings in compact tab format
  */
 @Composable
 fun SettingsContent(viewModel: DictionaryViewModel) {
+    val context = LocalContext.current
     val clipboardMonitoringEnabled by viewModel.clipboardMonitoringEnabled.collectAsState()
+    val floatingWindowEnabled by viewModel.floatingWindowEnabled.collectAsState()
+
+    val floatingWindowManager = remember { FloatingWindowManager(context) }
+
 
     Column(
         modifier = Modifier
@@ -79,7 +86,61 @@ fun SettingsContent(viewModel: DictionaryViewModel) {
                 }
             }
 
-            // About Section
+            // Floating Window Toggle Section
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "Floating Translator",
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                                Text(
+                                    "Show floating button for quick translation",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = floatingWindowEnabled,
+                                onCheckedChange = {
+                                    if (!floatingWindowEnabled) {
+                                        // User wants to enable - check permission first
+                                        if (PermissionHelper.canDrawOverlays(context)) {
+                                            // Permission granted, toggle ON and start service
+                                            viewModel.toggleFloatingWindow()
+                                            floatingWindowManager.startFloatingWindow()
+                                        } else {
+                                            // Permission not granted, open settings to request
+                                            PermissionHelper.requestOverlayPermission(context)
+                                        }
+                                    } else {
+                                        // User wants to disable - toggle OFF and stop service
+                                        viewModel.toggleFloatingWindow()
+                                        floatingWindowManager.stopFloatingWindow()
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),

@@ -72,8 +72,9 @@ class DictionaryViewModel(application: Application) : AndroidViewModel(applicati
     private val _phraseTranslation = MutableStateFlow<String?>(null)
     val phraseTranslation = _phraseTranslation.asStateFlow()
 
-    // 2.5. CLIPBOARD MONITORING: Expose clipboard manager's state
+    // 2.5. CLIPBOARD MONITORING: Expose clipboard manager's states
     val clipboardMonitoringEnabled: StateFlow<Boolean> = clipboardManager.isMonitoringEnabled
+    val floatingWindowEnabled: StateFlow<Boolean> = clipboardManager.isFloatingWindowEnabled
 
     // 3. OUTPUT: The Reactive UI State Pipeline
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
@@ -159,6 +160,12 @@ class DictionaryViewModel(application: Application) : AndroidViewModel(applicati
     fun toggleClipboardMonitoring() {
         viewModelScope.launch {
             clipboardManager.toggleMonitoring()
+        }
+    }
+
+    fun toggleFloatingWindow() {
+        viewModelScope.launch {
+            clipboardManager.toggleFloatingWindow()
         }
     }
 

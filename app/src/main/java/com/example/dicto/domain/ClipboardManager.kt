@@ -33,6 +33,13 @@ class ClipboardManager(
         .stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Lazily, true)
 
     /**
+     * StateFlow of floating window enabled state
+     * Automatically updates when preference changes
+     */
+    val isFloatingWindowEnabled: StateFlow<Boolean> = preferencesManager.floatingWindowEnabled
+        .stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Lazily, false)
+
+    /**
      * Toggle clipboard monitoring on/off and persist preference
      */
     suspend fun toggleMonitoring() {
@@ -40,6 +47,16 @@ class ClipboardManager(
         val newState = !currentState
         Log.d("ClipboardManager", "Toggling clipboard monitoring to: $newState")
         preferencesManager.setClipboardMonitoringEnabled(newState)
+    }
+
+    /**
+     * Toggle floating window on/off and persist preference
+     */
+    suspend fun toggleFloatingWindow() {
+        val currentState = isFloatingWindowEnabled.value
+        val newState = !currentState
+        Log.d("ClipboardManager", "Toggling floating window to: $newState")
+        preferencesManager.setFloatingWindowEnabled(newState)
     }
 
     /**
@@ -51,10 +68,25 @@ class ClipboardManager(
     }
 
     /**
+     * Set floating window state explicitly
+     */
+    suspend fun setFloatingWindowEnabled(enabled: Boolean) {
+        Log.d("ClipboardManager", "Setting floating window to: $enabled")
+        preferencesManager.setFloatingWindowEnabled(enabled)
+    }
+
+    /**
      * Check if monitoring is currently enabled
      */
-    fun isEnabled(): Boolean = isMonitoringEnabled.value
+    fun isMonitoringActive(): Boolean = isMonitoringEnabled.value
+
+    /**
+     * Check if floating window is currently enabled
+     */
+    fun isFloatingWindowActive(): Boolean = isFloatingWindowEnabled.value
 }
+
+
 
 
 
