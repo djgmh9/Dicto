@@ -2,6 +2,8 @@ package com.example.dicto
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,17 +63,40 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Input TextField
-        OutlinedTextField(
-            value = textInput,
-            onValueChange = { viewModel.onQueryChanged(it) },
-            label = { Text("أدخل جملة (Enter sentence)") },
-            modifier = Modifier.fillMaxWidth(),
-            textStyle = TextStyle(
-                textDirection = TextDirection.Rtl,
-                fontSize = MaterialTheme.typography.bodyLarge.fontSize
+        // Input TextField with Pronunciation Button
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            OutlinedTextField(
+                value = textInput,
+                onValueChange = { viewModel.onQueryChanged(it) },
+                label = { Text("أدخل جملة (Enter sentence)") },
+                modifier = Modifier
+                    .weight(1f),
+                textStyle = TextStyle(
+                    textDirection = TextDirection.Rtl,
+                    fontSize = MaterialTheme.typography.bodyLarge.fontSize
+                )
             )
-        )
+
+            // Pronunciation button for input sentence
+            if (textInput.isNotEmpty()) {
+                IconButton(
+                    onClick = { viewModel.pronounceInputSentence() },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.VolumeUp,
+                        contentDescription = "Pronounce input sentence",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 

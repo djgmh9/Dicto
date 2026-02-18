@@ -232,6 +232,21 @@ class DictionaryViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     /**
+     * Pronounce the entire input sentence (Arabic text user typed)
+     * This is the source language the user entered
+     */
+    fun pronounceInputSentence() {
+        val inputText = _searchQuery.value
+        if (inputText.isNotBlank()) {
+            ttsManager.speak(inputText, java.util.Locale("ar"), onComplete = {
+                Log.d("DictionaryViewModel", "Finished pronouncing input sentence: $inputText")
+            })
+        } else {
+            Log.w("DictionaryViewModel", "Cannot pronounce empty input sentence")
+        }
+    }
+
+    /**
      * Stop current pronunciation
      */
     fun stopPronunciation() {

@@ -73,6 +73,7 @@ private fun MainContent() {
     // Navigation state
     var selectedTab by remember { mutableIntStateOf(0) }
     var showSettings by remember { mutableStateOf(false) }
+    var previousTab by remember { mutableIntStateOf(0) }  // Remember which tab user was on before settings
 
     // Observe clipboard monitoring preference - waits for DataStore to load the actual saved value
     val clipboardMonitoringEnabled by viewModel.clipboardMonitoringEnabled.collectAsState()
@@ -129,7 +130,10 @@ private fun MainContent() {
     if (showSettings) {
         SettingsScreen(
             viewModel = viewModel,
-            onBackClick = { showSettings = false }
+            onBackClick = {
+                showSettings = false
+                selectedTab = previousTab  // Restore the previous tab
+            }
         )
     } else {
         Scaffold(
@@ -158,7 +162,10 @@ private fun MainContent() {
                         icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
                         label = { Text("Settings") },
                         selected = false,
-                        onClick = { showSettings = true }
+                        onClick = {
+                            previousTab = selectedTab  // Save current tab before opening settings
+                            showSettings = true
+                        }
                     )
                 }
             }

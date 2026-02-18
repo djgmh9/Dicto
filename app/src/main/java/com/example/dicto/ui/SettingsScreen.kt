@@ -17,6 +17,7 @@ import com.example.dicto.DictionaryViewModel
 /**
  * SettingsScreen - Handles all application settings
  * Follows modern separation of concerns pattern
+ * Uses Scaffold to properly handle edge-to-edge layout with status bar and navigation bar
  */
 @Composable
 fun SettingsScreen(
@@ -24,14 +25,17 @@ fun SettingsScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
-        // Header with back button
-        SettingsHeader(onBackClick = onBackClick)
-
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        topBar = {
+            SettingsHeader(onBackClick = onBackClick)
+        }
+    ) { innerPadding ->
         // Settings content
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(innerPadding)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
