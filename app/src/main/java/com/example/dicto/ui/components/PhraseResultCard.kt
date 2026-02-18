@@ -3,6 +3,7 @@ package com.example.dicto.ui.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -14,13 +15,18 @@ import androidx.compose.ui.unit.dp
 /**
  * PhraseResultCard - Displays the result of a phrase builder selection
  *
- * Single Responsibility: Show phrase translation with save functionality
+ * Single Responsibility: Show phrase translation with save and pronunciation (source language only)
+ * Features:
+ * - Display Arabic phrase with pronunciation button
+ * - Display English translation (display only, no TTS)
+ * - Save/unsave functionality
  * Used in: TranslatorContent phrase builder section
  *
  * @param original The original phrase in Arabic
- * @param translation The translated phrase in English
+ * @param translation The translated phrase in English (display only)
  * @param isSaved Whether the phrase is currently saved
  * @param onSave Callback when user toggles save
+ * @param onPlayAudio Callback to play Arabic pronunciation
  */
 @Composable
 fun PhraseResultCard(
@@ -28,6 +34,7 @@ fun PhraseResultCard(
     translation: String?,
     isSaved: Boolean,
     onSave: () -> Unit,
+    onPlayAudio: (String, String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     if (original.isBlank()) {
@@ -78,19 +85,38 @@ fun PhraseResultCard(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            // Original phrase (Arabic)
-            Text(
-                text = original,
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    textDirection = TextDirection.Rtl
-                ),
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+            // Original phrase (Arabic) with pronunciation button
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 8.dp)
-            )
+            ) {
+                Text(
+                    text = original,
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        textDirection = TextDirection.Rtl
+                    ),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.weight(1f)
+                )
 
-            // Translation (English)
+                Spacer(modifier = Modifier.width(8.dp))
+
+                IconButton(
+                    onClick = { onPlayAudio(original, "original") },
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.VolumeUp,
+                        contentDescription = "Pronounce Arabic phrase",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            // Translation (English) - Display only, no pronunciation
             if (!translation.isNullOrBlank()) {
                 Text(
                     text = translation,

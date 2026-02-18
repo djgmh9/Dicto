@@ -156,7 +156,10 @@ private fun ResultsContent(
                 original = selectedPhrase,
                 translation = phraseTranslation,
                 isSaved = isPhraseSaved,
-                onSave = { viewModel.toggleSave(selectedPhrase) }
+                onSave = { viewModel.toggleSave(selectedPhrase) },
+                onPlayAudio = { text, _ ->
+                    viewModel.pronounceOriginal(text)
+                }
             )
         }
 
@@ -169,7 +172,10 @@ private fun ResultsContent(
         items(state.wordTranslations) { wordItem ->
             WordRowItem(
                 wordResult = wordItem,
-                onToggleSave = { viewModel.toggleSave(it) }
+                onToggleSave = { viewModel.toggleSave(it) },
+                onPlayAudio = { text, _ ->
+                    viewModel.pronounceOriginal(text)
+                }
             )
         }
     }
@@ -207,7 +213,10 @@ fun SavedWordsContent(viewModel: DictionaryViewModel) {
             items(savedWords) { wordResult ->
                 WordRowItem(
                     wordResult = wordResult,
-                    onToggleSave = { viewModel.toggleSave(it) }
+                    onToggleSave = { viewModel.toggleSave(it) },
+                    onPlayAudio = { text, _ ->
+                        viewModel.pronounceOriginal(text)
+                    }
                 )
             }
         }

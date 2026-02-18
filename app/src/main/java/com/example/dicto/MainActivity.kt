@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.Icons
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 
 import androidx.compose.ui.platform.LocalContext
@@ -73,24 +74,25 @@ private fun MainContent() {
     var selectedTab by remember { mutableIntStateOf(0) }
     var showSettings by remember { mutableStateOf(false) }
 
+    // Observe clipboard monitoring preference - waits for DataStore to load the actual saved value
+    val clipboardMonitoringEnabled by viewModel.clipboardMonitoringEnabled.collectAsState()
+
     // Lazy initialize ClipboardMonitor only once
     val clipboardMonitor = remember {
         ClipboardMonitor(context, lifecycleOwner.lifecycleScope)
     }
 
     // --- LIFECYCLE-AWARE CLIPBOARD MONITORING ---
-    DisposableEffect(lifecycleOwner, selectedTab) {
+    DisposableEffect(lifecycleOwner, selectedTab, clipboardMonitoringEnabled) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
                     // Only monitor when on translator tab and monitoring is enabled
-                    if (selectedTab == 0) {
+                    if (selectedTab == 0 && clipboardMonitoringEnabled) {
                         lifecycleOwner.lifecycleScope.launch {
                             delay(300) // Small delay for app initialization
-                            if (viewModel.clipboardMonitoringEnabled.value) {
-                                clipboardMonitor.startMonitoring { text ->
-                                    viewModel.onClipboardTextFound(text)
-                                }
+                            clipboardMonitor.startMonitoring { text ->
+                                viewModel.onClipboardTextFound(text)
                             }
                         }
                     }
@@ -106,7 +108,7 @@ private fun MainContent() {
         // Initial state: Start monitoring if conditions are met
         if (selectedTab == 0 &&
             lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) &&
-            viewModel.clipboardMonitoringEnabled.value) {
+            clipboardMonitoringEnabled) {
             lifecycleOwner.lifecycleScope.launch {
                 delay(300)
                 clipboardMonitor.startMonitoring { text ->

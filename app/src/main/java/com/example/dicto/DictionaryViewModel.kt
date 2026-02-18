@@ -4,6 +4,8 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.dicto.utils.PreferencesManager
+import com.example.dicto.utils.TTSManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +46,19 @@ class DictionaryViewModel(application: Application) : AndroidViewModel(applicati
 
     private val repository = TranslationRepository()
     private val storage = WordStorage(application)
+    private val preferencesManager = PreferencesManager(application)
+
+    // TTS Manager - initialized once, survives screen rotation via ViewModel
+    private val ttsManager = TTSManager(application, viewModelScope).apply {
+        initialize(
+            onSuccess = {
+                Log.d("DictionaryViewModel", "TTS Manager initialized successfully")
+            },
+            onError = { error ->
+                Log.e("DictionaryViewModel", "TTS initialization error: $error")
+            }
+        )
+    }
 
     // 1. INPUT: The text the user types
     private val _searchQuery = MutableStateFlow("")
@@ -55,9 +70,11 @@ class DictionaryViewModel(application: Application) : AndroidViewModel(applicati
     private val _phraseTranslation = MutableStateFlow<String?>(null)
     val phraseTranslation = _phraseTranslation.asStateFlow()
 
-    // 2.5. CLIPBOARD MONITORING: Control clipboard auto-translate
-    private val _clipboardMonitoringEnabled = MutableStateFlow(true)
-    val clipboardMonitoringEnabled = _clipboardMonitoringEnabled.asStateFlow()
+    // 2.5. CLIPBOARD MONITORING: Persistent preference using StateFlow
+    // Observes PreferencesManager to get saved preference
+    val clipboardMonitoringEnabled: StateFlow<Boolean> = preferencesManager
+        .clipboardMonitoringEnabled
+        .stateIn(viewModelScope, SharingStarted.Lazily, true) // Default to true while loading
 
     // 3. OUTPUT: The Reactive UI State Pipeline
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
@@ -148,11 +165,11 @@ class DictionaryViewModel(application: Application) : AndroidViewModel(applicati
     // Called by Clipboard Logic
     fun onClipboardTextFound(text: String) {
         Log.d("DictionaryViewModel", "onClipboardTextFound called with: $text")
-        Log.d("DictionaryViewModel", "Monitoring enabled: ${_clipboardMonitoringEnabled.value}")
+        Log.d("DictionaryViewModel", "Monitoring enabled: ${clipboardMonitoringEnabled.value}")
         Log.d("DictionaryViewModel", "Current search query: ${_searchQuery.value}")
 
         // Only process if monitoring is enabled
-        if (_clipboardMonitoringEnabled.value && text.isNotBlank() && text != _searchQuery.value) {
+        if (clipboardMonitoringEnabled.value && text.isNotBlank() && text != _searchQuery.value) {
             Log.d("DictionaryViewModel", "Setting search query to clipboard text: $text")
             _searchQuery.value = text
             // No need to call translate() manually, the flow handles it!
@@ -161,9 +178,13 @@ class DictionaryViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    // Toggle clipboard monitoring on/off
+    // Toggle clipboard monitoring on/off and persist to preferences
     fun toggleClipboardMonitoring() {
-        _clipboardMonitoringEnabled.value = !_clipboardMonitoringEnabled.value
+        val newState = !clipboardMonitoringEnabled.value
+        Log.d("DictionaryViewModel", "Toggling clipboard monitoring to: $newState")
+        viewModelScope.launch {
+            preferencesManager.setClipboardMonitoringEnabled(newState)
+        }
     }
 
     // Called by Star Icon
@@ -187,9 +208,41 @@ class DictionaryViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    // Pronunciation methods for UI
+    /**
+     * Pronounce the original word (Arabic)
+     */
+    fun pronounceOriginal(word: String) {
+        if (word.isNotBlank()) {
+            ttsManager.speak(word, java.util.Locale("ar"), onComplete = {
+                Log.d("DictionaryViewModel", "Finished pronouncing: $word")
+            })
+        }
+    }
+
+    /**
+     * Pronounce the translation (English)
+     */
+    fun pronounceTranslation(translation: String) {
+        if (translation.isNotBlank()) {
+            ttsManager.speak(translation, java.util.Locale.ENGLISH, onComplete = {
+                Log.d("DictionaryViewModel", "Finished pronouncing translation: $translation")
+            })
+        }
+    }
+
+    /**
+     * Stop current pronunciation
+     */
+    fun stopPronunciation() {
+        ttsManager.stop()
+    }
+
     // Cleanup
     override fun onCleared() {
         super.onCleared()
         repository.close()
+        ttsManager.shutdown()
+        Log.d("DictionaryViewModel", "ViewModel cleared and TTS shutdown")
     }
 }
