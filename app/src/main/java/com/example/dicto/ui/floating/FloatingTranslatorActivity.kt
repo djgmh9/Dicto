@@ -9,22 +9,24 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dicto.ClipboardMonitoringManager
 import com.example.dicto.DictionaryViewModel
-import com.example.dicto.MainActivity
 import com.example.dicto.ui.theme.DictoTheme
 
 /**
  * FloatingTranslatorActivity - Displays translator as overlay on top of other apps
  *
- * Lightweight activity that shows translator interface as transparent overlay
- * Appears on top of current app without taking it out of focus
+ * Features:
+ * - Transparent overlay that shows translator interface
+ * - Auto-translate from clipboard (respects user preference)
+ * - Lifecycle-aware clipboard monitoring
+ * - Appears on top of current app without taking it out of focus
  */
 class FloatingTranslatorActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,7 +48,21 @@ class FloatingTranslatorActivity : ComponentActivity() {
                     color = Color.Transparent
                 ) {
                     val viewModel: DictionaryViewModel = viewModel()
+                    val context = LocalContext.current
+                    val lifecycleOwner = LocalLifecycleOwner.current
                     var shouldClose by remember { mutableStateOf(false) }
+
+                    // Get clipboard monitoring preference
+                    val clipboardMonitoringEnabled by viewModel.clipboardMonitoringEnabled.collectAsState()
+
+                    // Enable clipboard monitoring for floating translator
+                    ClipboardMonitoringManager(
+                        context = context,
+                        lifecycleOwner = lifecycleOwner,
+                        viewModel = viewModel,
+                        selectedTab = 0, // Always monitor in floating translator
+                        isEnabled = clipboardMonitoringEnabled
+                    )
 
                     if (!shouldClose) {
                         FloatingTranslatorOverlay(
@@ -64,11 +80,6 @@ class FloatingTranslatorActivity : ComponentActivity() {
         }
     }
 
-    override fun onBackPressed() {
-        Log.d("FloatingTranslatorActivity", "Back pressed")
-        finish()
-        super.onBackPressed()
-    }
 
     override fun onDestroy() {
         super.onDestroy()
