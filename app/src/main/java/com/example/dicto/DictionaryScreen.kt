@@ -2,7 +2,7 @@ package com.example.dicto
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.* // Make sure to import all '*' from runtime
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -10,22 +10,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.TextStyle
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.StarBorder
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.example.dicto.ui.components.*
 
 /**
  * DictionaryScreen - Main container for navigation between tabs
  *
  * Follows separation of concerns:
- * - Handles tab navigation
+ * - Handles tab navigation logic
  * - Delegates to specific content screens
+ * - Does not handle business logic
  */
 @Composable
 fun DictionaryScreen(
@@ -33,7 +29,6 @@ fun DictionaryScreen(
     selectedTab: Int,
     viewModel: DictionaryViewModel = viewModel()
 ) {
-    // Content is now switched based on the selectedTab passed from MainActivity
     Box(modifier = modifier.fillMaxSize()) {
         when (selectedTab) {
             0 -> TranslatorContent(viewModel)
@@ -42,14 +37,21 @@ fun DictionaryScreen(
     }
 }
 
+/**
+ * TranslatorContent - Main translator interface
+ *
+ * Responsibilities:
+ * - Input text field
+ * - Translation state display (Loading, Error, Success)
+ * - Phrase builder
+ * - Word by word results
+ *
+ * Uses extracted components for each section
+ */
 @Composable
 fun TranslatorContent(viewModel: DictionaryViewModel) {
     val uiState by viewModel.uiState.collectAsState()
-
-    // IMPORTANT: Binding the text field to the ViewModel
     val textInput by viewModel.searchQuery.collectAsState()
-
-    // Phrase builder states
     val selectedPhrase by viewModel.selectedPhrase.collectAsState()
     val phraseTranslation by viewModel.phraseTranslation.collectAsState()
 
@@ -59,15 +61,12 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Input TextField
         OutlinedTextField(
             value = textInput,
-            onValueChange = {
-                // This updates the ViewModel, which triggers the debounce flow
-                viewModel.onQueryChanged(it)
-            },
+            onValueChange = { viewModel.onQueryChanged(it) },
             label = { Text("أدخل جملة (Enter sentence)") },
             modifier = Modifier.fillMaxWidth(),
-            // RTL support
             textStyle = TextStyle(
                 textDirection = TextDirection.Rtl,
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize
@@ -79,7 +78,7 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
         // Clear button
         if (textInput.isNotEmpty()) {
             Button(
-                onClick = { viewModel.onQueryChanged("") }, // Clear text
+                onClick = { viewModel.onQueryChanged("") },
                 modifier = Modifier.align(Alignment.End)
             ) {
                 Text("Clear")
@@ -88,80 +87,108 @@ fun TranslatorContent(viewModel: DictionaryViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // --- RESULTS SECTION ---
+        // Results Section - Changes based on UI state
         when (val state = uiState) {
             is DictionaryUiState.Idle -> {
-                Text("Enter text to start", style = MaterialTheme.typography.bodyLarge)
+                EmptyStateDisplay(message = "Enter text to start")
             }
+
             is DictionaryUiState.Loading -> {
-                CircularProgressIndicator()
+                LoadingStateIndicator()
             }
+
             is DictionaryUiState.Error -> {
-                Text(text = state.message, color = MaterialTheme.colorScheme.error)
+                ErrorStateDisplay(message = state.message)
             }
+
             is DictionaryUiState.Success -> {
-                // We use LazyColumn for the list so it scrolls efficiently
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // 1. Full Sentence Result
-                    item {
-                        Text("Full Translation:", style = MaterialTheme.typography.labelLarge)
-                        Text(state.fullTranslation, style = MaterialTheme.typography.headlineSmall)
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-                    }
-
-                    // 2. PHRASE BUILDER SECTION
-                    item {
-                        // Extract just the original words list from the result
-                        val originalWords = state.wordTranslations.map { it.original }
-
-                        PhraseBuilderSection(
-                            words = originalWords,
-                            onPhraseChanged = { viewModel.onPhraseSelectionChanged(it) }
-                        )
-                    }
-
-                    // 3. PHRASE RESULT DISPLAY
-                    item {
-                        // Check if the phrase is saved by looking it up in saved words
-                        val isPhraseSaved = state.wordTranslations.any { it.original == selectedPhrase && it.isSaved }
-
-                        PhraseResultCard(
-                            original = selectedPhrase,
-                            translation = phraseTranslation,
-                            isSaved = isPhraseSaved,
-                            onSave = { viewModel.toggleSave(selectedPhrase) }
-                        )
-                    }
-
-                    item {
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-                        Text("Word by Word:", style = MaterialTheme.typography.labelLarge)
-                    }
-
-                    // 4. Individual Words
-                    items(state.wordTranslations) { wordItem ->
-                        WordRowItem(
-                            wordResult = wordItem,
-                            onToggleSave = { viewModel.toggleSave(it) }
-                        )
-                    }
-                }
+                ResultsContent(
+                    state = state,
+                    selectedPhrase = selectedPhrase,
+                    phraseTranslation = phraseTranslation,
+                    viewModel = viewModel
+                )
             }
         }
     }
 }
 
+/**
+ * ResultsContent - Displays translation results in a scrollable list
+ *
+ * Sub-components:
+ * - Full translation header
+ * - Phrase builder section
+ * - Phrase result card
+ * - Word by word list
+ */
+@Composable
+private fun ResultsContent(
+    state: DictionaryUiState.Success,
+    selectedPhrase: String,
+    phraseTranslation: String?,
+    viewModel: DictionaryViewModel
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // 1. Full Sentence Translation
+        item {
+            TranslationResultHeader(translation = state.fullTranslation)
+        }
+
+        // 2. Phrase Builder
+        item {
+            val originalWords = state.wordTranslations.map { it.original }
+            PhraseBuilderSection(
+                words = originalWords,
+                onPhraseChanged = { viewModel.onPhraseSelectionChanged(it) }
+            )
+        }
+
+        // 3. Phrase Result
+        item {
+            val isPhraseSaved = state.wordTranslations.any {
+                it.original == selectedPhrase && it.isSaved
+            }
+            PhraseResultCard(
+                original = selectedPhrase,
+                translation = phraseTranslation,
+                isSaved = isPhraseSaved,
+                onSave = { viewModel.toggleSave(selectedPhrase) }
+            )
+        }
+
+        // 4. Word by Word Header
+        item {
+            WordByWordHeader()
+        }
+
+        // 5. Individual Words
+        items(state.wordTranslations) { wordItem ->
+            WordRowItem(
+                wordResult = wordItem,
+                onToggleSave = { viewModel.toggleSave(it) }
+            )
+        }
+    }
+}
+
+/**
+ * SavedWordsContent - Displays user's saved words library
+ *
+ * Responsibilities:
+ * - List all saved words
+ * - Allow unsaving words
+ * - Show empty state when no words saved
+ */
 @Composable
 fun SavedWordsContent(viewModel: DictionaryViewModel) {
     val savedWords by viewModel.savedWordsList.collectAsState()
 
     if (savedWords.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("No saved words yet", style = MaterialTheme.typography.bodyLarge)
-        }
+        EmptyStateDisplay(message = "No saved words yet")
     } else {
         LazyColumn(
             modifier = Modifier
@@ -178,9 +205,6 @@ fun SavedWordsContent(viewModel: DictionaryViewModel) {
             }
 
             items(savedWords) { wordResult ->
-                // We reuse the exact same Row Item!
-                // Because we pass 'onToggleSave', clicking the star here will UN-SAVE it
-                // and it will instantly disappear from this list.
                 WordRowItem(
                     wordResult = wordResult,
                     onToggleSave = { viewModel.toggleSave(it) }
@@ -190,50 +214,3 @@ fun SavedWordsContent(viewModel: DictionaryViewModel) {
     }
 }
 
-// Helper composable for a single row
-@Composable
-fun WordRowItem(
-    wordResult: WordResult,
-    onToggleSave: (String) -> Unit // Callback function
-) {
-    Card(
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // LEFT: Star Icon + English
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { onToggleSave(wordResult.original) }) {
-                    Icon(
-                        imageVector = if (wordResult.isSaved) Icons.Filled.Star else Icons.Outlined.StarBorder,
-                        contentDescription = "Save word",
-                        tint = if (wordResult.isSaved) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = wordResult.translation,
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodyLarge.copy(textDirection = TextDirection.Ltr)
-                )
-            }
-
-            // RIGHT: Arabic
-            Text(
-                text = wordResult.original,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    textDirection = TextDirection.Rtl
-                )
-            )
-        }
-    }
-}
