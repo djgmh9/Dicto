@@ -80,6 +80,15 @@ class FloatingTranslatorActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Called when user presses home or recent buttons
+     * This ensures floating button is restored when user leaves the overlay
+     */
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        Log.d("FloatingTranslatorActivity", "User pressed home/recent - closing overlay")
+        finish()
+    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -89,6 +98,3 @@ class FloatingTranslatorActivity : ComponentActivity() {
         sendBroadcast(intent)
     }
 }
-
-
-
