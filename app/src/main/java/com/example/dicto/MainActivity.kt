@@ -35,7 +35,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 import com.example.dicto.utils.ClipboardMonitor
-import com.example.dicto.ui.SettingsScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -72,8 +71,6 @@ private fun MainContent() {
 
     // Navigation state
     var selectedTab by remember { mutableIntStateOf(0) }
-    var showSettings by remember { mutableStateOf(false) }
-    var previousTab by remember { mutableIntStateOf(0) }  // Remember which tab user was on before settings
 
     // Observe clipboard monitoring preference - waits for DataStore to load the actual saved value
     val clipboardMonitoringEnabled by viewModel.clipboardMonitoringEnabled.collectAsState()
@@ -88,10 +85,10 @@ private fun MainContent() {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
-                    // Only monitor when on translator tab and monitoring is enabled
+                    // Only monitor when on translator tab (0) and monitoring is enabled
                     if (selectedTab == 0 && clipboardMonitoringEnabled) {
                         lifecycleOwner.lifecycleScope.launch {
-                            delay(300) // Small delay for app initialization
+                            delay(300)
                             clipboardMonitor.startMonitoring { text ->
                                 viewModel.onClipboardTextFound(text)
                             }
@@ -126,55 +123,36 @@ private fun MainContent() {
         }
     }
 
-    // Main layout
-    if (showSettings) {
-        SettingsScreen(
-            viewModel = viewModel,
-            onBackClick = {
-                showSettings = false
-                selectedTab = previousTab  // Restore the previous tab
+    // Main layout with tab navigation
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Home, contentDescription = "Translator") },
+                    label = { Text("Translator") },
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Favorite, contentDescription = "Saved Words") },
+                    label = { Text("Saved") },
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
+                    label = { Text("Settings") },
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 }
+                )
             }
-        )
-    } else {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            bottomBar = {
-                NavigationBar {
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Filled.Home, contentDescription = "Translator") },
-                        label = { Text("Translator") },
-                        selected = selectedTab == 0,
-                        onClick = {
-                            selectedTab = 0
-                            showSettings = false
-                        }
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Filled.Favorite, contentDescription = "Saved Words") },
-                        label = { Text("Saved") },
-                        selected = selectedTab == 1,
-                        onClick = {
-                            selectedTab = 1
-                            showSettings = false
-                        }
-                    )
-                    NavigationBarItem(
-                        icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
-                        label = { Text("Settings") },
-                        selected = false,
-                        onClick = {
-                            previousTab = selectedTab  // Save current tab before opening settings
-                            showSettings = true
-                        }
-                    )
-                }
-            }
-        ) { innerPadding ->
-            DictionaryScreen(
-                modifier = Modifier.padding(innerPadding),
-                selectedTab = selectedTab,
-                viewModel = viewModel
-            )
         }
+    ) { innerPadding ->
+        DictionaryScreen(
+            modifier = Modifier.padding(innerPadding),
+            selectedTab = selectedTab,
+            viewModel = viewModel
+        )
     }
 }
