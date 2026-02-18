@@ -69,6 +69,14 @@ class FloatingTranslatorActivity : ComponentActivity() {
         finish()
         super.onBackPressed()
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("FloatingTranslatorActivity", "Activity destroyed - restoring floating button")
+        // Send broadcast to service to restore floating button
+        val intent = Intent("com.example.dicto.RESTORE_FLOATING_BUTTON")
+        sendBroadcast(intent)
+    }
 }
 
 

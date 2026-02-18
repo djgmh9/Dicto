@@ -3,7 +3,10 @@ package com.example.dicto.ui.floating
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.os.Build
@@ -36,6 +39,7 @@ class FloatingWindowService : Service() {
     private var initialTouchX = 0f
     private var initialTouchY = 0f
     private var isDragging = false
+    private var restoreReceiver: BroadcastReceiver? = null
 
     companion object {
         private const val NOTIFICATION_ID = 1
@@ -48,6 +52,26 @@ class FloatingWindowService : Service() {
         super.onCreate()
         AppLogger.logServiceState("FloatingWindowService", "CREATED")
         createNotificationChannel()
+        registerRestoreReceiver()
+    }
+
+    private fun registerRestoreReceiver() {
+        restoreReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action == "com.example.dicto.RESTORE_FLOATING_BUTTON") {
+                    AppLogger.logServiceState("FloatingWindowService", "Restoring floating button")
+                    restoreFloatingButton()
+                }
+            }
+        }
+        val filter = IntentFilter("com.example.dicto.RESTORE_FLOATING_BUTTON")
+
+        // Register with RECEIVER_EXPORTED flag for Android 12+ compatibility
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            registerReceiver(restoreReceiver, filter, Context.RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(restoreReceiver, filter)
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -89,6 +113,12 @@ class FloatingWindowService : Service() {
         super.onDestroy()
         AppLogger.logServiceState("FloatingWindowService", "DESTROYING")
         try {
+            // Unregister broadcast receiver
+            if (restoreReceiver != null) {
+                unregisterReceiver(restoreReceiver)
+                AppLogger.debug("FloatingWindow", "Broadcast receiver unregistered")
+            }
+
             // Remove trash bin first
             hideTrashBin()
 
@@ -178,18 +208,27 @@ class FloatingWindowService : Service() {
 
                         MotionEvent.ACTION_UP -> {
                             if (!isDragging) {
-                                AppLogger.logUserAction("Floating Button Tapped", "Opening translator overlay")
+                                AppLogger.logUserAction("Floating Button Tapped", "Opening translator overlay - hiding button")
                                 try {
+                                    // Hide floating button before opening translator
+                                    windowManager?.removeView(floatingView)
+                                    hideTrashBin()
+
                                     val intent = Intent(this@FloatingWindowService, FloatingTranslatorActivity::class.java)
                                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                                     startActivity(intent)
                                 } catch (e: Exception) {
                                     AppLogger.error("FloatingWindow", "Error opening app", e)
+                                    // Restore button if error
+                                    windowManager?.addView(floatingView, params)
                                 }
                             } else {
+                                AppLogger.debug("FloatingWindow", "Checking if near trash at (${event.rawX}, ${event.rawY})")
                                 if (isNearTrash(event.rawX, event.rawY)) {
                                     AppLogger.logUserAction("Floating Button", "Dropped on trash - closing")
                                     closeFloatingWindow()
+                                } else {
+                                    AppLogger.debug("FloatingWindow", "Drag completed at (${params.x}, ${params.y})")
                                 }
                             }
                             hideTrashBin()
@@ -220,9 +259,13 @@ class FloatingWindowService : Service() {
                     alpha = 0.7f
                 }
 
+                val screenWidth = windowManager?.defaultDisplay?.width ?: 1080
+                val trashSize = 200
+                val trashCenterX = (screenWidth - trashSize) / 2  // Properly centered
+
                 trashParams = WindowManager.LayoutParams(
-                    200,
-                    200,
+                    trashSize,
+                    trashSize,
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                         WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                     else
@@ -230,14 +273,14 @@ class FloatingWindowService : Service() {
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                     PixelFormat.TRANSLUCENT
                 ).apply {
-                    x = -100
-                    y = 1500
-                    width = 200
-                    height = 200
+                    x = trashCenterX  // Centered horizontally
+                    y = 1500          // Bottom of screen
+                    width = trashSize
+                    height = trashSize
                 }
 
                 windowManager?.addView(trashView, trashParams)
-                AppLogger.debug("FloatingWindow", "Trash bin shown")
+                AppLogger.debug("FloatingWindow", "Trash bin shown at x=$trashCenterX")
             }
         } catch (e: Exception) {
             AppLogger.error("FloatingWindow", "Error showing trash bin", e)
@@ -267,13 +310,18 @@ class FloatingWindowService : Service() {
     }
 
     private fun isNearTrash(x: Float, y: Float): Boolean {
-        val trashCenterX = (windowManager?.defaultDisplay?.width ?: 1080) / 2
-        val trashCenterY = 1600
+        val screenWidth = windowManager?.defaultDisplay?.width ?: 1080
+        val trashCenterX = (screenWidth / 2).toFloat()  // Properly centered
+        val trashCenterY = 1600f
+
         val distance = Math.sqrt(
             Math.pow((x - trashCenterX).toDouble(), 2.0) +
             Math.pow((y - trashCenterY).toDouble(), 2.0)
         )
-        return distance < 150
+
+        val isNear = distance < 200  // Increased threshold from 150 to 200
+        AppLogger.debug("FloatingWindow", "Distance to trash: ${distance.toInt()}, isNear: $isNear")
+        return isNear
     }
 
     private fun closeFloatingWindow() {
@@ -282,6 +330,23 @@ class FloatingWindowService : Service() {
             stopSelf()
         } catch (e: Exception) {
             AppLogger.error("FloatingWindow", "Error closing floating window", e)
+        }
+    }
+
+    private fun restoreFloatingButton() {
+        try {
+            if (floatingView != null && layoutParams != null) {
+                // Check if button is still in window
+                if (floatingView?.windowToken == null) {
+                    // Button was removed, add it back
+                    windowManager?.addView(floatingView, layoutParams)
+                    AppLogger.logServiceState("FloatingWindowService", "RESTORED", "Button restored to screen")
+                } else {
+                    AppLogger.debug("FloatingWindow", "Button already visible, no restore needed")
+                }
+            }
+        } catch (e: Exception) {
+            AppLogger.error("FloatingWindow", "Error restoring button", e)
         }
     }
 }
