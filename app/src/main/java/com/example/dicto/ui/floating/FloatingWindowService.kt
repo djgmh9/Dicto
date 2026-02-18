@@ -10,11 +10,13 @@ import android.os.IBinder
 import android.view.WindowManager
 import com.example.dicto.utils.AppLogger
 import com.example.dicto.utils.PreferencesManager
+import com.example.dicto.ui.floating.util.PositionPersistence
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 
 /**
@@ -25,7 +27,7 @@ import kotlinx.coroutines.launch
  * - FloatingButtonManager: Button creation and touch handling
  * - TrashBinManager: Trash bin display and proximity detection
  * - NotificationHelper: Foreground notification management
- * - PreferencesManager: Position persistence
+ * - PositionPersistence: Position loading/saving/constraining (shared)
  */
 class FloatingWindowService : Service() {
 
@@ -35,6 +37,7 @@ class FloatingWindowService : Service() {
     private var notificationHelper: NotificationHelper? = null
     private var restoreReceiver: BroadcastReceiver? = null
     private var preferencesManager: PreferencesManager? = null
+    private var positionPersistence: PositionPersistence? = null
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
 
@@ -48,6 +51,7 @@ class FloatingWindowService : Service() {
 
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         preferencesManager = PreferencesManager(this)
+        positionPersistence = PositionPersistence(this, preferencesManager!!, serviceScope)
         notificationHelper = NotificationHelper(this)
         notificationHelper?.createNotificationChannel()
 
@@ -205,12 +209,10 @@ class FloatingWindowService : Service() {
             // Don't save position when dropped on trash - button will restore to previous location
             stopSelf()
         } else if (wasDragging) {
-            android.util.Log.d("DICTO_FLOATING", ">>> Normal drag end - saving position x=$finalX, y=$finalY")
-            // Save position only for normal drag operations (not trash drops)
-            serviceScope.launch {
-                preferencesManager?.setFloatingButtonPosition(finalX, finalY)
-                android.util.Log.d("DICTO_FLOATING", ">>> Position saved: x=$finalX, y=$finalY")
-            }
+            android.util.Log.d("DICTO_FLOATING", ">>> Normal drag end - saving position via PositionPersistence")
+            // Use PositionPersistence to save (it handles constraining)
+            positionPersistence?.savePosition(finalX, finalY)
+            android.util.Log.d("DICTO_FLOATING", ">>> Position saved via PositionPersistence")
         }
         trashBinManager?.hide()
     }
