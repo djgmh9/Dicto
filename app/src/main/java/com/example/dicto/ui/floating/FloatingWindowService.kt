@@ -8,12 +8,11 @@ import android.graphics.Color
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
-import android.view.Gravity
 import android.view.MotionEvent
 import android.view.WindowManager
 import android.widget.ImageView
 import androidx.core.app.NotificationCompat
+import com.example.dicto.utils.AppLogger
 
 /**
  * FloatingWindowService - Displays a draggable floating translation button
@@ -29,7 +28,9 @@ class FloatingWindowService : Service() {
 
     private var windowManager: WindowManager? = null
     private var floatingView: ImageView? = null
+    private var trashView: ImageView? = null
     private var layoutParams: WindowManager.LayoutParams? = null
+    private var trashParams: WindowManager.LayoutParams? = null
     private var initialX = 0
     private var initialY = 0
     private var initialTouchX = 0f
@@ -45,15 +46,17 @@ class FloatingWindowService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d("FloatingWindowService", "onCreate called")
+        AppLogger.logServiceState("FloatingWindowService", "CREATED")
         createNotificationChannel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("FloatingWindowService", "Service started")
+        AppLogger.logServiceState("FloatingWindowService", "STARTED", "Building notification")
 
         try {
-            // Create and show notification for foreground service
+            windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+
+            // Create notification FIRST before creating window
             val notification = NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Dicto Translator")
                 .setContentText("Floating translator is active")
@@ -62,30 +65,43 @@ class FloatingWindowService : Service() {
                 .setOngoing(true)
                 .build()
 
+            // Start foreground BEFORE any other operations
+            AppLogger.logServiceState("FloatingWindowService", "STARTING_FOREGROUND")
             startForeground(NOTIFICATION_ID, notification)
+            AppLogger.logServiceState("FloatingWindowService", "FOREGROUND_ACTIVE", "Notification shown")
 
-            windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+            // Now create the floating window
+            AppLogger.logServiceState("FloatingWindowService", "CREATING_WINDOW")
             createFloatingWindow()
+            AppLogger.logServiceState("FloatingWindowService", "WINDOW_CREATED", "Button visible")
         } catch (e: Exception) {
-            Log.e("FloatingWindowService", "Error starting service: ${e.message}", e)
+            AppLogger.logServiceState("FloatingWindowService", "ERROR", e.message ?: "Unknown error")
+            AppLogger.error("FloatingWindowService", "Error in onStartCommand", e)
             stopSelf()
         }
 
+        // Use START_STICKY to restart service if killed by system
+        AppLogger.logServiceState("FloatingWindowService", "STICKY_MODE", "Will restart if killed")
         return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        AppLogger.logServiceState("FloatingWindowService", "DESTROYING")
         try {
+            // Remove trash bin first
+            hideTrashBin()
+
+            // Remove floating view
             if (floatingView != null && floatingView?.windowToken != null) {
                 windowManager?.removeView(floatingView)
-                Log.d("FloatingWindowService", "Floating view removed")
+                AppLogger.logServiceState("FloatingWindowService", "VIEW_REMOVED")
             }
         } catch (e: Exception) {
-            Log.e("FloatingWindowService", "Error removing view: ${e.message}", e)
+            AppLogger.error("FloatingWindowService", "Error removing view", e)
         }
         stopForeground(true)
-        Log.d("FloatingWindowService", "Service destroyed")
+        AppLogger.logServiceState("FloatingWindowService", "DESTROYED", "Foreground stopped")
     }
 
     private fun createNotificationChannel() {
@@ -103,9 +119,9 @@ class FloatingWindowService : Service() {
 
     private fun createFloatingWindow() {
         try {
-            Log.d("FloatingWindowService", "Creating floating window...")
+            AppLogger.logServiceState("FloatingWindowService", "Creating floating window with drag support")
 
-            // Create layout parameters first
+            // Create layout parameters FIRST (no gravity - allows free positioning)
             val params = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
@@ -116,7 +132,7 @@ class FloatingWindowService : Service() {
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT
             ).apply {
-                gravity = Gravity.TOP or Gravity.END
+                // NO gravity - allows free positioning anywhere on screen
                 x = 0
                 y = 100
                 width = 150
@@ -125,7 +141,7 @@ class FloatingWindowService : Service() {
 
             layoutParams = params
 
-            // Create a simple ImageView
+            // Create floating button
             floatingView = ImageView(this).apply {
                 setBackgroundColor(Color.parseColor("#6200EE"))
                 setImageResource(android.R.drawable.ic_menu_search)
@@ -135,12 +151,13 @@ class FloatingWindowService : Service() {
                 setOnTouchListener { _, event ->
                     when (event.action) {
                         MotionEvent.ACTION_DOWN -> {
-                            // Store current position from layoutParams
                             initialX = params.x
                             initialY = params.y
                             initialTouchX = event.rawX
                             initialTouchY = event.rawY
                             isDragging = false
+                            showTrashBin()
+                            AppLogger.debug("FloatingWindow", "Touch DOWN at (${event.rawX}, ${event.rawY})")
                             true
                         }
 
@@ -148,28 +165,34 @@ class FloatingWindowService : Service() {
                             val deltaX = event.rawX - initialTouchX
                             val deltaY = event.rawY - initialTouchY
 
-                            // If movement is significant, start dragging
                             if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
                                 isDragging = true
                                 params.x = (initialX + deltaX).toInt()
                                 params.y = (initialY + deltaY).toInt()
                                 windowManager?.updateViewLayout(floatingView, params)
+                                updateTrashBinState(event.rawX, event.rawY)
+                                AppLogger.debug("FloatingWindow", "Dragging to (${params.x}, ${params.y})")
                             }
                             true
                         }
 
                         MotionEvent.ACTION_UP -> {
-                            // If not dragging, treat as click
                             if (!isDragging) {
-                                Log.d("FloatingWindowService", "Floating button clicked")
+                                AppLogger.logUserAction("Floating Button Tapped", "Opening translator overlay")
                                 try {
                                     val intent = Intent(this@FloatingWindowService, FloatingTranslatorActivity::class.java)
                                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                                     startActivity(intent)
                                 } catch (e: Exception) {
-                                    Log.e("FloatingWindowService", "Error opening app: ${e.message}", e)
+                                    AppLogger.error("FloatingWindow", "Error opening app", e)
+                                }
+                            } else {
+                                if (isNearTrash(event.rawX, event.rawY)) {
+                                    AppLogger.logUserAction("Floating Button", "Dropped on trash - closing")
+                                    closeFloatingWindow()
                                 }
                             }
+                            hideTrashBin()
                             isDragging = false
                             true
                         }
@@ -180,10 +203,85 @@ class FloatingWindowService : Service() {
             }
 
             windowManager?.addView(floatingView, params)
-            Log.d("FloatingWindowService", "Floating window created successfully")
+            AppLogger.logServiceState("FloatingWindowService", "WINDOW_ADDED", "Button visible - full drag support enabled")
         } catch (e: Exception) {
-            Log.e("FloatingWindowService", "Error creating floating window: ${e.message}", e)
+            AppLogger.error("FloatingWindowService", "Error creating floating window", e)
             stopSelf()
+        }
+    }
+
+    private fun showTrashBin() {
+        try {
+            if (trashView == null) {
+                trashView = ImageView(this).apply {
+                    setBackgroundColor(Color.parseColor("#FF0000"))
+                    setImageResource(android.R.drawable.ic_menu_delete)
+                    scaleType = ImageView.ScaleType.CENTER
+                    alpha = 0.7f
+                }
+
+                trashParams = WindowManager.LayoutParams(
+                    200,
+                    200,
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                    else
+                        WindowManager.LayoutParams.TYPE_PHONE,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                    PixelFormat.TRANSLUCENT
+                ).apply {
+                    x = -100
+                    y = 1500
+                    width = 200
+                    height = 200
+                }
+
+                windowManager?.addView(trashView, trashParams)
+                AppLogger.debug("FloatingWindow", "Trash bin shown")
+            }
+        } catch (e: Exception) {
+            AppLogger.error("FloatingWindow", "Error showing trash bin", e)
+        }
+    }
+
+    private fun hideTrashBin() {
+        try {
+            if (trashView != null && trashView?.windowToken != null) {
+                windowManager?.removeView(trashView)
+                trashView = null
+                AppLogger.debug("FloatingWindow", "Trash bin hidden")
+            }
+        } catch (e: Exception) {
+            AppLogger.error("FloatingWindow", "Error hiding trash bin", e)
+        }
+    }
+
+    private fun updateTrashBinState(x: Float, y: Float) {
+        if (isNearTrash(x, y)) {
+            trashView?.alpha = 1.0f
+            trashView?.setBackgroundColor(Color.parseColor("#FF3333"))
+        } else {
+            trashView?.alpha = 0.7f
+            trashView?.setBackgroundColor(Color.parseColor("#FF0000"))
+        }
+    }
+
+    private fun isNearTrash(x: Float, y: Float): Boolean {
+        val trashCenterX = (windowManager?.defaultDisplay?.width ?: 1080) / 2
+        val trashCenterY = 1600
+        val distance = Math.sqrt(
+            Math.pow((x - trashCenterX).toDouble(), 2.0) +
+            Math.pow((y - trashCenterY).toDouble(), 2.0)
+        )
+        return distance < 150
+    }
+
+    private fun closeFloatingWindow() {
+        try {
+            AppLogger.logServiceState("FloatingWindowService", "CLOSING", "User closed via trash")
+            stopSelf()
+        } catch (e: Exception) {
+            AppLogger.error("FloatingWindow", "Error closing floating window", e)
         }
     }
 }

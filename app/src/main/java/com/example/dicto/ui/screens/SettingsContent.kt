@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.dicto.DictionaryViewModel
 import com.example.dicto.domain.FloatingWindowManager
+import com.example.dicto.utils.AppLogger
 import com.example.dicto.utils.PermissionHelper
 
 /**
@@ -29,7 +30,14 @@ fun SettingsContent(viewModel: DictionaryViewModel) {
 
     val floatingWindowManager = remember { FloatingWindowManager(context) }
 
-
+    // Sync floating window service state with preference
+    LaunchedEffect(floatingWindowEnabled) {
+        if (floatingWindowEnabled && PermissionHelper.canDrawOverlays(context)) {
+            floatingWindowManager.startFloatingWindow()
+        } else if (!floatingWindowEnabled) {
+            floatingWindowManager.stopFloatingWindow()
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -121,16 +129,20 @@ fun SettingsContent(viewModel: DictionaryViewModel) {
                                 onCheckedChange = {
                                     if (!floatingWindowEnabled) {
                                         // User wants to enable - check permission first
+                                        AppLogger.logUserAction("Floating Translator Toggle", "Toggling ON")
                                         if (PermissionHelper.canDrawOverlays(context)) {
                                             // Permission granted, toggle ON and start service
+                                            AppLogger.logServiceState("FloatingWindow", "PERMISSION_GRANTED")
                                             viewModel.toggleFloatingWindow()
                                             floatingWindowManager.startFloatingWindow()
                                         } else {
                                             // Permission not granted, open settings to request
+                                            AppLogger.logUserAction("Floating Translator", "Permission not granted, opening settings")
                                             PermissionHelper.requestOverlayPermission(context)
                                         }
                                     } else {
                                         // User wants to disable - toggle OFF and stop service
+                                        AppLogger.logUserAction("Floating Translator Toggle", "Toggling OFF")
                                         viewModel.toggleFloatingWindow()
                                         floatingWindowManager.stopFloatingWindow()
                                     }

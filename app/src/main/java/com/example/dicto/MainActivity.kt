@@ -24,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dicto.domain.FloatingWindowManager
 import com.example.dicto.ui.AppBottomNavigation
 import com.example.dicto.ui.theme.DictoTheme
+import com.example.dicto.utils.AppLogger
 
 /**
  * MainActivity - Application entry point
@@ -32,11 +33,12 @@ import com.example.dicto.ui.theme.DictoTheme
  * - Initialize and configure the activity
  * - Enable edge-to-edge layout
  * - Set the theme and compose content
- * - Check and request runtime permissions for floating window
+ * - Log app lifecycle events
  */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppLogger.logAppEvent("MainActivity.onCreate", "App starting")
         enableEdgeToEdge()
 
         setContent {
@@ -44,6 +46,21 @@ class MainActivity : ComponentActivity() {
                 MainContent()
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        AppLogger.logAppEvent("MainActivity.onResume", "App returned to foreground")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        AppLogger.logAppEvent("MainActivity.onPause", "App going to background")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        AppLogger.logAppEvent("MainActivity.onDestroy", "App being destroyed")
     }
 }
 
@@ -77,22 +94,27 @@ private fun MainContent() {
 
     // Restore floating window state on app launch with permission check
     LaunchedEffect(Unit) {
+        AppLogger.logAppEvent("MainContent.LaunchedEffect", "Checking floating window state on startup")
+
         if (floatingWindowEnabled) {
             // Check if we have permission to draw over other apps
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (Settings.canDrawOverlays(context)) {
                     // Permission granted, start floating window
+                    AppLogger.logServiceState("FloatingWindow", "STARTING", "Permission granted")
                     floatingWindowManager.startFloatingWindow()
-                    Log.d("MainActivity", "Floating window permission granted, starting service")
                 } else {
                     // Permission not granted, disable the preference
+                    AppLogger.logServiceState("FloatingWindow", "BLOCKED", "Permission denied")
                     viewModel.toggleFloatingWindow()
-                    Log.w("MainActivity", "Floating window permission not granted, disabling feature")
                 }
             } else {
                 // Android versions before M don't require this permission
+                AppLogger.logServiceState("FloatingWindow", "STARTING", "Android < M")
                 floatingWindowManager.startFloatingWindow()
             }
+        } else {
+            AppLogger.logServiceState("FloatingWindow", "DISABLED", "Preference is off")
         }
     }
 
