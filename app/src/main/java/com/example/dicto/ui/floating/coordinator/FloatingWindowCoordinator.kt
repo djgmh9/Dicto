@@ -96,8 +96,29 @@ class FloatingWindowCoordinator(private val service: Service) {
     fun cleanup() {
         FloatingWindowLogger.positionSaved(0, 0) // Log cleanup
         AppLogger.logServiceState("FloatingWindowCoordinator", "CLEANING_UP")
+        android.util.Log.d("DICTO_FLOATING", ">>> [CLEANUP_START] Cleaning up floating window service")
 
         try {
+            // Save current button position before destroying it (SYNCHRONOUSLY!)
+            android.util.Log.d("DICTO_FLOATING", ">>> [CLEANUP] Getting current button position...")
+            val position = buttonManager?.getCurrentPosition()
+            if (position != null) {
+                val (x, y) = position
+                android.util.Log.d("DICTO_FLOATING", ">>> [CLEANUP] Current button position BEFORE cleanup: x=$x, y=$y")
+                // Use runBlocking to ensure position is saved BEFORE service is destroyed
+                try {
+                    kotlinx.coroutines.runBlocking {
+                        positionPersistence?.savePositionSync(x, y)
+                    }
+                    android.util.Log.d("DICTO_FLOATING", ">>> [CLEANUP] Position saved and committed: x=$x, y=$y")
+                    FloatingWindowLogger.positionSaved(x, y)
+                } catch (e: Exception) {
+                    android.util.Log.e("DICTO_FLOATING", ">>> [CLEANUP] Error saving position: ${e.message}", e)
+                }
+            } else {
+                android.util.Log.d("DICTO_FLOATING", ">>> [CLEANUP] No position to save (buttonManager is null or no position)")
+            }
+
             // Unregister broadcast receiver
             if (restoreReceiver != null) {
                 unregisterRestoreReceiver()
@@ -107,6 +128,7 @@ class FloatingWindowCoordinator(private val service: Service) {
             // Destroy managers
             trashBinManager?.destroy()
             buttonManager?.destroy()
+            android.util.Log.d("DICTO_FLOATING", ">>> [CLEANUP_END] Service cleanup completed")
             AppLogger.logServiceState("FloatingWindowCoordinator", "COMPONENTS_DESTROYED")
         } catch (e: Exception) {
             FloatingWindowLogger.error("Error in cleanup()", e)
@@ -132,16 +154,21 @@ class FloatingWindowCoordinator(private val service: Service) {
     private fun loadAndShowButton() {
         if (windowManager == null) return
 
+        android.util.Log.d("DICTO_FLOATING", ">>> [LOAD_POSITION_START] loadAndShowButton() called")
         var positionLoaded = false
         var loadedX = 0
         var loadedY = 100
 
         // Launch coroutine to load position
         serviceScope.launch {
+            android.util.Log.d("DICTO_FLOATING", ">>> [LOAD_POSITION_COROUTINE_START] Getting preferences flows")
             val savedX = preferencesManager?.floatingButtonX
             val savedY = preferencesManager?.floatingButtonY
 
+            android.util.Log.d("DICTO_FLOATING", ">>> [LOAD_POSITION_CHECK] savedX=$savedX, savedY=$savedY")
+
             if (savedX != null && savedY != null) {
+                android.util.Log.d("DICTO_FLOATING", ">>> [LOAD_POSITION_COMBINING] Combining X and Y flows")
                 combine(savedX, savedY) { x, y -> Pair(x, y) }
                     .take(1)  // Only first emission to prevent spam
                     .collect { (x, y) ->
@@ -149,24 +176,34 @@ class FloatingWindowCoordinator(private val service: Service) {
                         loadedY = y
                         positionLoaded = true
 
+                        android.util.Log.d("DICTO_FLOATING", ">>> [LOAD_POSITION_SUCCESS] Position loaded from Flow: x=$x, y=$y")
                         FloatingWindowLogger.loadedPosition(x, y)
                         AppLogger.debug("FloatingWindowCoordinator", "Loaded saved position: x=$x, y=$y")
 
+                        android.util.Log.d("DICTO_FLOATING", ">>> [LOAD_POSITION_INIT_MANAGERS] Initializing managers with x=$x, y=$y")
                         initializeManagers(loadedX, loadedY)
                         showButton()
                         AppLogger.logServiceState("FloatingWindowCoordinator", "WINDOW_CREATED", "Button visible")
                     }
+            } else {
+                android.util.Log.d("DICTO_FLOATING", ">>> [LOAD_POSITION_NO_SAVED] No saved position found in preferences")
+                positionLoaded = true  // Mark as loaded so fallback won't run
             }
         }
 
-        // Fallback: if position doesn't load in 500ms, show with defaults
+        // Fallback: if position doesn't load in 1000ms, show with defaults
         serviceScope.launch {
-            delay(500)
-            if (!positionLoaded) {
+            delay(1000)
+            if (!positionLoaded && buttonManager == null) {
+                android.util.Log.d("DICTO_FLOATING", ">>> [LOAD_POSITION_FALLBACK] Timeout reached, using defaults (0, 100)")
                 FloatingWindowLogger.loadedPosition(0, 100)
                 initializeManagers(0, 100)
                 showButton()
                 AppLogger.logServiceState("FloatingWindowCoordinator", "WINDOW_CREATED", "Button visible (fallback)")
+            } else if (positionLoaded) {
+                android.util.Log.d("DICTO_FLOATING", ">>> [LOAD_POSITION_FALLBACK_SKIP] Position already loaded, skipping fallback")
+            } else if (buttonManager != null) {
+                android.util.Log.d("DICTO_FLOATING", ">>> [LOAD_POSITION_FALLBACK_SKIP] ButtonManager already initialized, skipping fallback")
             }
         }
     }

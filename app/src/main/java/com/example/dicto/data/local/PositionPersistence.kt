@@ -42,15 +42,36 @@ class PositionPersistence(
     }
 
     /**
-     * Save position to persistent storage (constrained)
-     * @param x X coordinate (will be constrained)
-     * @param y Y coordinate (will be constrained)
+     * Save position to persistent storage
+     * IMPORTANT: Saves EXACT position, NO constraining!
+     * WindowManager already handles bounds, so we save what user dragged to.
+     * WARNING: This launches a coroutine but does NOT wait for completion!
+     * For immediate saves during cleanup, use savePositionSync() instead.
+     *
+     * @param x X coordinate (saved as-is)
+     * @param y Y coordinate (saved as-is)
      */
     fun savePosition(x: Int, y: Int) {
-        val (constrainedX, constrainedY) = constrainPositionToBounds(x, y)
+        android.util.Log.d("DICTO_FLOATING", ">>> PositionPersistence.savePosition() async: x=$x, y=$y (NO constraint)")
         coroutineScope.launch {
-            preferencesManager.setFloatingButtonPosition(constrainedX, constrainedY)
+            preferencesManager.setFloatingButtonPosition(x, y)
+            android.util.Log.d("DICTO_FLOATING", ">>> PositionPersistence async save completed: x=$x, y=$y")
         }
+    }
+
+    /**
+     * Save position synchronously (blocks until saved to disk)
+     * IMPORTANT: Saves EXACT position, NO constraining!
+     * Use this during cleanup or when service is being destroyed.
+     * WindowManager already handles bounds, so we save what user dragged to.
+     *
+     * @param x X coordinate (saved as-is)
+     * @param y Y coordinate (saved as-is)
+     */
+    suspend fun savePositionSync(x: Int, y: Int) {
+        android.util.Log.d("DICTO_FLOATING", ">>> PositionPersistence.savePositionSync() sync START: x=$x, y=$y (NO constraint)")
+        preferencesManager.setFloatingButtonPosition(x, y)
+        android.util.Log.d("DICTO_FLOATING", ">>> PositionPersistence.savePositionSync() sync COMPLETE: x=$x, y=$y")
     }
 
     /**

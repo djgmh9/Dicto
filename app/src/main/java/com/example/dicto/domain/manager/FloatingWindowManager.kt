@@ -43,10 +43,10 @@ class FloatingWindowManager(private val context: Context) {
      */
     fun stopFloatingWindow() {
         try {
-            android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowManager.stopFloatingWindow() called")
+            android.util.Log.d("DICTO_FLOATING", ">>> [BEFORE_STOP] FloatingWindowManager.stopFloatingWindow() - STOPPING SERVICE")
             val intent = Intent(context, FloatingWindowService::class.java)
             context.stopService(intent)
-            android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowManager.stopFloatingWindow() - Service stopped")
+            android.util.Log.d("DICTO_FLOATING", ">>> [AFTER_STOP] FloatingWindowManager.stopFloatingWindow() - Service stopped")
             Log.d("FloatingWindowManager", "Floating window service stopped")
         } catch (e: Exception) {
             android.util.Log.e("DICTO_FLOATING", ">>> FloatingWindowManager.stopFloatingWindow() ERROR: ${e.message}")

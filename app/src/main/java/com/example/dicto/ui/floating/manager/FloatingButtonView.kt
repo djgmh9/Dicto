@@ -135,6 +135,18 @@ class FloatingButtonView(
     fun getFloatingView(): android.widget.ImageView? = floatingView
 
     /**
+     * Get current button position from layout params
+     * @return Pair of (x, y) coordinates or null if not initialized
+     */
+    fun getCurrentPosition(): Pair<Int, Int>? {
+        return if (layoutParams != null) {
+            Pair(layoutParams!!.x, layoutParams!!.y)
+        } else {
+            null
+        }
+    }
+
+    /**
      * Update window layout (used during dragging)
      */
     fun updateLayout() {

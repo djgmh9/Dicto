@@ -84,5 +84,11 @@ class FloatingButtonManager(
      * Check if button is currently visible
      */
     fun isVisible(): Boolean = buttonView.isVisible()
+
+    /**
+     * Get current button position
+     * @return Pair of (x, y) coordinates or null if not initialized
+     */
+    fun getCurrentPosition(): Pair<Int, Int>? = buttonView.getCurrentPosition()
 }
 
