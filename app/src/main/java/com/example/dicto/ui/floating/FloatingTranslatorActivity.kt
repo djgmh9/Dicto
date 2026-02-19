@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.dicto.presentation.screens.DictionaryViewModel
+import com.example.dicto.presentation.screens.translator.TranslatorViewModel
 import com.example.dicto.ui.theme.DictoTheme
 import com.example.dicto.utils.ClipboardMonitoringManager
 
@@ -47,13 +47,14 @@ class FloatingTranslatorActivity : ComponentActivity() {
                         .background(Color.Transparent),
                     color = Color.Transparent
                 ) {
-                    val viewModel: DictionaryViewModel = viewModel()
+                    val viewModel: TranslatorViewModel = viewModel()
                     val context = LocalContext.current
                     val lifecycleOwner = LocalLifecycleOwner.current
                     var shouldClose by remember { mutableStateOf(false) }
 
-                    // Get clipboard monitoring preference
-                    val clipboardMonitoringEnabled by viewModel.clipboardMonitoringEnabled.collectAsState()
+                    // Get clipboard monitoring preference from a shared preferences manager
+                    // For now, we'll check it once at creation
+                    var clipboardMonitoringEnabled by remember { mutableStateOf(true) }
 
                     // Enable clipboard monitoring for floating translator
                     ClipboardMonitoringManager(

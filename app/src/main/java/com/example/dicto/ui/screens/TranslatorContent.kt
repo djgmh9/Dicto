@@ -2,7 +2,8 @@ package com.example.dicto.ui.screens
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.example.dicto.presentation.screens.DictionaryViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dicto.presentation.screens.translator.TranslatorViewModel
 import com.example.dicto.ui.components.TranslatorUI
 
 /**
@@ -14,7 +15,9 @@ import com.example.dicto.ui.components.TranslatorUI
  * This is a thin wrapper that uses the shared TranslatorUI component.
  */
 @Composable
-fun TranslatorContent(viewModel: DictionaryViewModel) {
+fun TranslatorContent(
+    viewModel: TranslatorViewModel
+) {
     TranslatorUI(viewModel = viewModel)
 }
 

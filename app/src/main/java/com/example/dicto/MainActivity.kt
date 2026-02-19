@@ -11,21 +11,22 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dicto.domain.FloatingWindowManager
-import com.example.dicto.presentation.screens.DictionaryViewModel
+import com.example.dicto.presentation.screens.settings.SettingsViewModel
+import com.example.dicto.presentation.screens.translator.TranslatorViewModel
 import com.example.dicto.ui.AppBottomNavigation
 import com.example.dicto.ui.screens.DictionaryScreen
 import com.example.dicto.ui.theme.DictoTheme
 import com.example.dicto.utils.AppLogger
 import com.example.dicto.utils.ClipboardMonitoringManager
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -115,16 +116,16 @@ class MainActivity : ComponentActivity() {
 private fun MainContent(onFloatingWindowPreferenceChanged: (Boolean) -> Unit = {}) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val viewModel: DictionaryViewModel = viewModel()
 
     // Navigation state
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    // Observe clipboard monitoring preference
-    val clipboardMonitoringEnabled by viewModel.clipboardMonitoringEnabled.collectAsState()
+    // Create ViewModels for each screen feature
+    val translatorViewModel: TranslatorViewModel = viewModel()
+    val settingsViewModel: SettingsViewModel = viewModel()
 
-    // Observe floating window preference
-    val floatingWindowEnabled by viewModel.floatingWindowEnabled.collectAsState()
+    // Observe floating window preference from settings view model
+    val floatingWindowEnabled by settingsViewModel.floatingWindowEnabled.collectAsState()
 
     // Floating window manager for restoring state on app launch
     val floatingWindowManager = remember { FloatingWindowManager(context) }
@@ -149,21 +150,24 @@ private fun MainContent(onFloatingWindowPreferenceChanged: (Boolean) -> Unit = {
             } else {
                 // Permission not granted, disable the preference
                 AppLogger.logServiceState("FloatingWindow", "BLOCKED", "Permission denied")
-                viewModel.toggleFloatingWindow()
+                settingsViewModel.toggleFloatingWindow()
             }
         } else {
             AppLogger.logServiceState("FloatingWindow", "DISABLED", "Preference is off")
         }
     }
 
-    // Manage clipboard monitoring lifecycle
-    ClipboardMonitoringManager(
-        context = context,
-        lifecycleOwner = lifecycleOwner,
-        viewModel = viewModel,
-        selectedTab = selectedTab,
-        isEnabled = clipboardMonitoringEnabled
-    )
+    // Manage clipboard monitoring lifecycle for translator screen only
+    if (selectedTab == 0) {
+        val clipboardMonitoringEnabled by settingsViewModel.clipboardMonitoringEnabled.collectAsState()
+        ClipboardMonitoringManager(
+            context = context,
+            lifecycleOwner = lifecycleOwner,
+            viewModel = translatorViewModel,
+            selectedTab = selectedTab,
+            isEnabled = clipboardMonitoringEnabled
+        )
+    }
 
     // Main layout with Scaffold and bottom navigation
     Scaffold(
@@ -178,7 +182,8 @@ private fun MainContent(onFloatingWindowPreferenceChanged: (Boolean) -> Unit = {
         DictionaryScreen(
             modifier = Modifier.padding(innerPadding),
             selectedTab = selectedTab,
-            viewModel = viewModel
+            translatorViewModel = translatorViewModel,
+            settingsViewModel = settingsViewModel
         )
     }
 }

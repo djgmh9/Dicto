@@ -8,7 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.dicto.presentation.screens.DictionaryViewModel
+import com.example.dicto.presentation.screens.translator.TranslatorViewModel
 import com.example.dicto.domain.model.DictionaryUiState
 import com.example.dicto.ui.components.*
 
@@ -26,10 +26,10 @@ fun ResultsContent(
     state: DictionaryUiState.Success,
     selectedPhrase: String,
     phraseTranslation: String?,
-    viewModel: DictionaryViewModel
+    viewModel: TranslatorViewModel
 ) {
     // Observe saved words to check if phrase is saved
-    val savedWords by viewModel.savedWordsList.collectAsState()
+    val savedWords by viewModel.savedWordsSet.collectAsState()
 
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
@@ -51,8 +51,8 @@ fun ResultsContent(
 
         // 3. Phrase Result
         item {
-            // Check if phrase is in saved words list
-            val isPhraseSaved = savedWords.any { it.original == selectedPhrase }
+            // Check if phrase is in saved words set
+            val isPhraseSaved = savedWords.contains(selectedPhrase)
             PhraseResultCard(
                 original = selectedPhrase,
                 translation = phraseTranslation,

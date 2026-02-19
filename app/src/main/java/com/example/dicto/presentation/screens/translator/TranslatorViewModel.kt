@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dicto.data.local.WordStorage
-import com.example.dicto.data.local.PreferencesManager
 import com.example.dicto.data.repository.TranslationRepository
 import com.example.dicto.domain.PronunciationManager
 import com.example.dicto.domain.TranslationManager
@@ -84,6 +83,10 @@ class TranslatorViewModel(application: Application) : AndroidViewModel(applicati
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DictionaryUiState.Idle)
 
+    // ==================== SAVED WORDS SET ====================
+    val savedWordsSet: StateFlow<Set<String>> = storage.savedWordsFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
+
     // ==================== PHRASE BUILDER ====================
     private val _selectedPhrase = MutableStateFlow("")
     val selectedPhrase: StateFlow<String> = _selectedPhrase.asStateFlow()
@@ -95,6 +98,12 @@ class TranslatorViewModel(application: Application) : AndroidViewModel(applicati
 
     fun onQueryChanged(newQuery: String) {
         _searchQuery.value = newQuery
+    }
+
+    fun onClipboardTextFound(text: String) {
+        if (text.isNotBlank() && text != _searchQuery.value) {
+            _searchQuery.value = text
+        }
     }
 
     fun toggleSave(word: String) {

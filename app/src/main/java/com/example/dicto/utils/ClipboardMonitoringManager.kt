@@ -10,7 +10,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.example.dicto.presentation.screens.DictionaryViewModel
+import com.example.dicto.presentation.screens.translator.TranslatorViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
 fun ClipboardMonitoringManager(
     context: Context,
     lifecycleOwner: LifecycleOwner,
-    viewModel: DictionaryViewModel,
+    viewModel: TranslatorViewModel,
     selectedTab: Int,
     isEnabled: Boolean
 ) {

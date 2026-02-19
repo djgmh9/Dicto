@@ -8,7 +8,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.dicto.presentation.screens.DictionaryViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dicto.presentation.screens.settings.SettingsViewModel
 import com.example.dicto.utils.AppLogger
 import com.example.dicto.utils.PermissionHelper
 
@@ -22,7 +23,9 @@ import com.example.dicto.utils.PermissionHelper
  * - All settings in compact tab format
  */
 @Composable
-fun SettingsContent(viewModel: DictionaryViewModel) {
+fun SettingsContent(
+    viewModel: SettingsViewModel
+) {
     val context = LocalContext.current
     val clipboardMonitoringEnabled by viewModel.clipboardMonitoringEnabled.collectAsState()
     val floatingWindowEnabled by viewModel.floatingWindowEnabled.collectAsState()

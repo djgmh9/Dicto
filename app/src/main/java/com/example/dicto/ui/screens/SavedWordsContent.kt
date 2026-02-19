@@ -9,7 +9,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.dicto.presentation.screens.DictionaryViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dicto.presentation.screens.saved.SavedWordsViewModel
 import com.example.dicto.ui.components.*
 
 /**
@@ -21,7 +22,9 @@ import com.example.dicto.ui.components.*
  * - Show empty state when no words saved
  */
 @Composable
-fun SavedWordsContent(viewModel: DictionaryViewModel) {
+fun SavedWordsContent(
+    viewModel: SavedWordsViewModel
+) {
     val savedWords by viewModel.savedWordsList.collectAsState()
 
     if (savedWords.isEmpty()) {
@@ -44,9 +47,9 @@ fun SavedWordsContent(viewModel: DictionaryViewModel) {
             items(savedWords) { wordResult ->
                 WordRowItem(
                     wordResult = wordResult,
-                    onToggleSave = { viewModel.toggleSave(it) },
+                    onToggleSave = { viewModel.onDeleteWord(it) },
                     onPlayAudio = { text, _ ->
-                        viewModel.pronounceOriginal(text)
+                        viewModel.onPlayPronunciation(text)
                     }
                 )
             }

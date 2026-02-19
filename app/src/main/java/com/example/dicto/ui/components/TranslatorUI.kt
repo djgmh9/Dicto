@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
-import com.example.dicto.presentation.screens.DictionaryViewModel
+import com.example.dicto.presentation.screens.translator.TranslatorViewModel
 import com.example.dicto.domain.model.DictionaryUiState
 import com.example.dicto.ui.screens.ResultsContent
 
@@ -33,7 +33,7 @@ import com.example.dicto.ui.screens.ResultsContent
  */
 @Composable
 fun TranslatorUI(
-    viewModel: DictionaryViewModel,
+    viewModel: TranslatorViewModel,
     modifier: Modifier = Modifier
 ) {
     val searchQuery by viewModel.searchQuery.collectAsState()

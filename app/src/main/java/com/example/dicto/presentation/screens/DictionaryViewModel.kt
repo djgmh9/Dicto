@@ -28,9 +28,16 @@ import kotlinx.coroutines.flow.stateIn
 
 
 /**
- * DictionaryViewModel - Main view model for the dictionary app
+ * DictionaryViewModel - DEPRECATED - Use feature-specific ViewModels instead
  *
- * Responsibilities:
+ * This class has been split into:
+ * - TranslatorViewModel (translator tab logic)
+ * - SavedWordsViewModel (saved words tab logic)
+ * - SettingsViewModel (settings tab logic)
+ *
+ * Kept for reference only. DO NOT USE in new code.
+ *
+ * Old Responsibilities (now distributed):
  * - Manage UI state
  * - Coordinate managers (Translation, Pronunciation, Clipboard)
  * - Expose state flows to UI
@@ -41,6 +48,16 @@ import kotlinx.coroutines.flow.stateIn
  * - PronunciationManager: All TTS/pronunciation
  * - ClipboardManager: All clipboard preferences
  */
+@Deprecated(
+    message = "Use feature-specific ViewModels: TranslatorViewModel, SavedWordsViewModel, SettingsViewModel",
+    replaceWith = ReplaceWith(
+        "TranslatorViewModel, SavedWordsViewModel, SettingsViewModel",
+        "com.example.dicto.presentation.screens.translator.TranslatorViewModel",
+        "com.example.dicto.presentation.screens.saved.SavedWordsViewModel",
+        "com.example.dicto.presentation.screens.settings.SettingsViewModel"
+    ),
+    level = DeprecationLevel.ERROR
+)
 class DictionaryViewModel(application: Application) : AndroidViewModel(application) {
 
     // MANAGERS - Each handles one specific concern

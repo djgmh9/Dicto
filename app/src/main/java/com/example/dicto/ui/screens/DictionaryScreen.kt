@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.dicto.presentation.screens.DictionaryViewModel
+import com.example.dicto.presentation.screens.translator.TranslatorViewModel
+import com.example.dicto.presentation.screens.saved.SavedWordsViewModel
+import com.example.dicto.presentation.screens.settings.SettingsViewModel
 
 /**
  * DictionaryScreen - Main container for navigation between tabs
@@ -24,13 +26,16 @@ import com.example.dicto.presentation.screens.DictionaryViewModel
 fun DictionaryScreen(
     modifier: Modifier = Modifier,
     selectedTab: Int,
-    viewModel: DictionaryViewModel = viewModel()
+    translatorViewModel: TranslatorViewModel = viewModel(),
+    settingsViewModel: SettingsViewModel = viewModel()
 ) {
+    val savedWordsViewModel: SavedWordsViewModel = viewModel()
+
     Box(modifier = modifier.fillMaxSize()) {
         when (selectedTab) {
-            0 -> TranslatorContent(viewModel)
-            1 -> SavedWordsContent(viewModel)
-            2 -> SettingsContent(viewModel)
+            0 -> TranslatorContent(viewModel = translatorViewModel)
+            1 -> SavedWordsContent(viewModel = savedWordsViewModel)
+            2 -> SettingsContent(viewModel = settingsViewModel)
         }
     }
 }
