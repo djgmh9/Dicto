@@ -10,8 +10,8 @@ import android.view.WindowManager
 import com.example.dicto.ui.floating.FloatingButtonManager
 import com.example.dicto.ui.floating.FloatingTranslatorActivity
 import com.example.dicto.ui.floating.TrashBinManager
-import com.example.dicto.ui.floating.NotificationHelper
-import com.example.dicto.ui.floating.util.PositionPersistence
+import com.example.dicto.utils.notification.NotificationHelper
+import com.example.dicto.data.local.PositionPersistence
 import com.example.dicto.data.local.PreferencesManager
 import com.example.dicto.utils.AppLogger
 import com.example.dicto.utils.logging.FloatingWindowLogger
