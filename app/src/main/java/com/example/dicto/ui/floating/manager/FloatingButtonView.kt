@@ -8,6 +8,7 @@ import android.view.MotionEvent
 import android.view.WindowManager
 import android.widget.ImageView
 import com.example.dicto.utils.AppLogger
+import com.example.dicto.utils.logging.FloatingWindowLogger
 
 /**
  * FloatingButtonView - Creates and manages floating button UI
@@ -39,16 +40,16 @@ class FloatingButtonView(
      * @param onTouchListener Callback for touch events
      */
     fun show(onTouchListener: (MotionEvent) -> Boolean) {
-        android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView.show() called, floatingView=$floatingView")
+        FloatingWindowLogger.floatingButtonViewShow()
 
         if (floatingView != null) {
-            android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView.show() - Button already exists, checking if visible")
+            FloatingWindowLogger.floatingButtonAlreadyExists()
             if (floatingView?.windowToken != null) {
-                android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView.show() - Button already visible, skipping")
+                FloatingWindowLogger.floatingButtonAlreadyVisible()
                 AppLogger.debug("FloatingButtonView", "Button already exists, skipping creation")
                 return
             } else {
-                android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView.show() - Button exists but not visible, adding to window")
+                FloatingWindowLogger.floatingButtonReaddingToWindow()
             }
         }
 
@@ -57,9 +58,9 @@ class FloatingButtonView(
 
         floatingView = createImageView(params, onTouchListener)
 
-        android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView.show() - About to addView")
+        FloatingWindowLogger.floatingButtonAboutToAdd()
         windowManager.addView(floatingView, params)
-        android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView.show() - Button added to window")
+        FloatingWindowLogger.floatingButtonAdded()
         AppLogger.debug("FloatingButtonView", "Floating button created and shown")
     }
 
@@ -67,16 +68,16 @@ class FloatingButtonView(
      * Hide button temporarily (keeps reference for restoration)
      */
     fun hide() {
-        android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView.hide() called")
+        FloatingWindowLogger.floatingButtonViewHide()
         try {
             if (floatingView != null && floatingView?.windowToken != null) {
-                android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView.hide() - Removing button from window")
+                FloatingWindowLogger.floatingButtonRemoving()
                 windowManager.removeView(floatingView)
-                android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView.hide() - Button removed")
+                FloatingWindowLogger.floatingButtonRemoved()
                 AppLogger.debug("FloatingButtonView", "Floating button hidden")
             }
         } catch (e: Exception) {
-            android.util.Log.e("DICTO_FLOATING", ">>> FloatingButtonView.hide() ERROR: ${e.message}", e)
+            FloatingWindowLogger.error("Error hiding button", e)
             AppLogger.error("FloatingButtonView", "Error hiding button", e)
         }
     }
@@ -85,16 +86,16 @@ class FloatingButtonView(
      * Restore button if it was hidden
      */
     fun restore() {
-        android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView.restore() called")
+        FloatingWindowLogger.floatingButtonRestore()
         try {
             if (floatingView != null && layoutParams != null && floatingView?.windowToken == null) {
-                android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView.restore() - Re-adding button to window")
+                FloatingWindowLogger.floatingButtonRestoreReadding()
                 windowManager.addView(floatingView, layoutParams)
-                android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView.restore() - Button restored")
+                FloatingWindowLogger.floatingButtonRestored()
                 AppLogger.debug("FloatingButtonView", "Floating button restored")
             }
         } catch (e: Exception) {
-            android.util.Log.e("DICTO_FLOATING", ">>> FloatingButtonView.restore() ERROR: ${e.message}", e)
+            FloatingWindowLogger.error("Error restoring button", e)
             AppLogger.error("FloatingButtonView", "Error restoring button", e)
         }
     }

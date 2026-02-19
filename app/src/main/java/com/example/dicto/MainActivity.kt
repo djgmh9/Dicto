@@ -26,6 +26,7 @@ import com.example.dicto.ui.screens.DictionaryScreen
 import com.example.dicto.ui.theme.DictoTheme
 import com.example.dicto.utils.AppLogger
 import com.example.dicto.utils.ClipboardMonitoringManager
+import com.example.dicto.utils.logging.FloatingWindowLogger
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -46,7 +47,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onCreate - App starting, floatingWindowPreferenceEnabled=$floatingWindowPreferenceEnabled")
+        FloatingWindowLogger.mainActivityOnCreate()
 
         floatingWindowManager = FloatingWindowManager(this)
 
@@ -56,9 +57,9 @@ class MainActivity : ComponentActivity() {
             DictoTheme {
                 MainContent { enabled ->
                     // Callback to receive preference updates from Compose
-                    android.util.Log.d("DICTO_FLOATING", ">>> Preference callback received: enabled=$enabled")
+                    FloatingWindowLogger.preferenceCallbackReceived(enabled)
                     floatingWindowPreferenceEnabled = enabled
-                    android.util.Log.d("DICTO_FLOATING", ">>> Updated floatingWindowPreferenceEnabled to $floatingWindowPreferenceEnabled")
+                    FloatingWindowLogger.preferenceUpdated(enabled)
                 }
             }
         }
@@ -66,38 +67,37 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onStart - floatingWindowPreferenceEnabled=$floatingWindowPreferenceEnabled")
+        FloatingWindowLogger.mainActivityOnStart()
     }
 
     override fun onResume() {
         super.onResume()
-        android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onResume - App returned to foreground, hiding floating button, floatingWindowPreferenceEnabled=$floatingWindowPreferenceEnabled")
+        FloatingWindowLogger.mainActivityOnResume()
         // Always hide floating button when inside Dicto
         floatingWindowManager?.stopFloatingWindow()
-        android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onResume - stopFloatingWindow called")
+        FloatingWindowLogger.mainActivityOnResumeStopFloatingWindow()
     }
 
     override fun onPause() {
         super.onPause()
-        android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onPause - App going to background, floatingWindowPreferenceEnabled=$floatingWindowPreferenceEnabled")
+        FloatingWindowLogger.mainActivityOnPause()
         // Show floating button when leaving Dicto - but only if preference is enabled
         if (floatingWindowPreferenceEnabled) {
-            android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onPause - Preference is ENABLED, calling startFloatingWindow()")
+            FloatingWindowLogger.mainActivityOnPauseShowButton()
             floatingWindowManager?.startFloatingWindow()
-            android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onPause - startFloatingWindow called")
         } else {
-            android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onPause - Preference is DISABLED, NOT showing button")
+            FloatingWindowLogger.warn("Floating window preference is DISABLED, NOT showing button")
         }
     }
 
     override fun onStop() {
         super.onStop()
-        android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onStop - App stopped")
+        FloatingWindowLogger.mainActivityOnStop()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        android.util.Log.d("DICTO_FLOATING", ">>> MainActivity.onDestroy - App being destroyed")
+        FloatingWindowLogger.mainActivityOnDestroy()
     }
 }
 
@@ -132,9 +132,9 @@ private fun MainContent(onFloatingWindowPreferenceChanged: (Boolean) -> Unit = {
 
     // Notify MainActivity of preference changes
     LaunchedEffect(floatingWindowEnabled) {
-        android.util.Log.d("DICTO_FLOATING", ">>> MainContent LaunchedEffect triggered: floatingWindowEnabled=$floatingWindowEnabled")
+        FloatingWindowLogger.mainContentLaunchedEffect(floatingWindowEnabled)
         onFloatingWindowPreferenceChanged(floatingWindowEnabled)
-        android.util.Log.d("DICTO_FLOATING", ">>> MainContent callback invoked with enabled=$floatingWindowEnabled")
+        FloatingWindowLogger.mainContentCallbackInvoked(floatingWindowEnabled)
     }
 
     // Restore floating window state on app launch with permission check
