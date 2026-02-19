@@ -43,23 +43,34 @@ class FloatingButtonView(
         FloatingWindowLogger.floatingButtonViewShow()
 
         if (floatingView != null) {
-            FloatingWindowLogger.floatingButtonAlreadyExists()
+            // Button already created - just re-add to window if not visible
             if (floatingView?.windowToken != null) {
-                FloatingWindowLogger.floatingButtonAlreadyVisible()
-                AppLogger.debug("FloatingButtonView", "Button already exists, skipping creation")
+                // Already visible, nothing to do
+                AppLogger.debug("FloatingButtonView", "Button already visible, skipping")
                 return
-            } else {
-                FloatingWindowLogger.floatingButtonReaddingToWindow()
             }
+            // Re-add existing view with existing layoutParams (preserves position)
+            android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView - Re-adding hidden button to window")
+            try {
+                windowManager.addView(floatingView, layoutParams)
+                android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView - Button re-added to window")
+                AppLogger.debug("FloatingButtonView", "Floating button re-added to window")
+            } catch (e: Exception) {
+                FloatingWindowLogger.error("Error re-adding button", e)
+                AppLogger.error("FloatingButtonView", "Error re-adding button", e)
+            }
+            return
         }
 
+        // First time creation
         val params = createLayoutParams()
         layoutParams = params
-
         floatingView = createImageView(params, onTouchListener)
 
         FloatingWindowLogger.floatingButtonAboutToAdd()
+        android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView - About to addView")
         windowManager.addView(floatingView, params)
+        android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView - Button added to window")
         FloatingWindowLogger.floatingButtonAdded()
         AppLogger.debug("FloatingButtonView", "Floating button created and shown")
     }
