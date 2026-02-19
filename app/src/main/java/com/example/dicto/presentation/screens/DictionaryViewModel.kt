@@ -1,4 +1,4 @@
-package com.example.dicto
+package com.example.dicto.presentation.screens
 
 import android.app.Application
 import android.util.Log
@@ -203,5 +203,4 @@ class DictionaryViewModel(application: Application) : AndroidViewModel(applicati
         Log.d("DictionaryViewModel", "ViewModel cleared and resources cleaned up")
     }
 }
-
 

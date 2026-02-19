@@ -1,14 +1,11 @@
-package com.example.dicto
+package com.example.dicto.ui.screens
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.dicto.ui.screens.ResultsContent
-import com.example.dicto.ui.screens.SavedWordsContent
-import com.example.dicto.ui.screens.SettingsContent
-import com.example.dicto.ui.screens.TranslatorContent
+import com.example.dicto.presentation.screens.DictionaryViewModel
 
 /**
  * DictionaryScreen - Main container for navigation between tabs

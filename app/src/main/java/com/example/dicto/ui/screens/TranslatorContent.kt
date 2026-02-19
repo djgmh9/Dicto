@@ -2,7 +2,7 @@ package com.example.dicto.ui.screens
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.example.dicto.DictionaryViewModel
+import com.example.dicto.presentation.screens.DictionaryViewModel
 import com.example.dicto.ui.components.TranslatorUI
 
 /**

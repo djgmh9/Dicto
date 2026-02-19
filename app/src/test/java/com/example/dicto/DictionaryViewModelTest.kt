@@ -3,6 +3,8 @@ package com.example.dicto
 import android.app.Application
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import app.cash.turbine.test
+import com.example.dicto.presentation.screens.DictionaryViewModel
+import com.example.dicto.domain.model.DictionaryUiState
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

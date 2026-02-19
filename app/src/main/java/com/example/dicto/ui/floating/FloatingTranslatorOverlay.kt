@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.example.dicto.DictionaryViewModel
+import com.example.dicto.presentation.screens.DictionaryViewModel
 import com.example.dicto.ui.components.TranslatorUI
 
 /**

@@ -1,4 +1,4 @@
-package com.example.dicto
+package com.example.dicto.utils
 
 import android.content.Context
 import android.util.Log
@@ -10,7 +10,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.example.dicto.utils.ClipboardMonitor
+import com.example.dicto.presentation.screens.DictionaryViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

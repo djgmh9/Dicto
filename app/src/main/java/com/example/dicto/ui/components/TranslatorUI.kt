@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
-import com.example.dicto.DictionaryViewModel
+import com.example.dicto.presentation.screens.DictionaryViewModel
 import com.example.dicto.domain.model.DictionaryUiState
 import com.example.dicto.ui.screens.ResultsContent
 

@@ -20,9 +20,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dicto.domain.FloatingWindowManager
+import com.example.dicto.presentation.screens.DictionaryViewModel
 import com.example.dicto.ui.AppBottomNavigation
+import com.example.dicto.ui.screens.DictionaryScreen
 import com.example.dicto.ui.theme.DictoTheme
 import com.example.dicto.utils.AppLogger
+import com.example.dicto.utils.ClipboardMonitoringManager
 
 /**
  * MainActivity - Application entry point

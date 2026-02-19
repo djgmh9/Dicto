@@ -15,9 +15,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.dicto.ClipboardMonitoringManager
-import com.example.dicto.DictionaryViewModel
+import com.example.dicto.presentation.screens.DictionaryViewModel
 import com.example.dicto.ui.theme.DictoTheme
+import com.example.dicto.utils.ClipboardMonitoringManager
 
 /**
  * FloatingTranslatorActivity - Displays translator as overlay on top of other apps
