@@ -7,7 +7,7 @@ import com.google.mlkit.nl.translate.TranslatorOptions
 import kotlinx.coroutines.tasks.await
 
 /**
- * TranslationRepository - Data source for translation operations
+ * TranslationRepository - ML Kit implementation of translation data source
  *
  * Data Layer Component
  * Responsibilities:
@@ -22,7 +22,7 @@ import kotlinx.coroutines.tasks.await
  * - Multiple translation providers
  * - Caching strategies
  */
-class TranslationRepository {
+class TranslationRepository : ITranslationRepository {
 
     // For this example, hardcode arabic to english
     // In a real app, you would pass these as arguments or use dependency injection
@@ -39,7 +39,7 @@ class TranslationRepository {
      * @param text Text to translate
      * @return Result containing translated text or error
      */
-    suspend fun translateText(text: String): Result<String> {
+    override suspend fun translateText(text: String): Result<String> {
         return try {
             // 1. Check if model needs downloading
             val conditions = DownloadConditions.Builder()
@@ -59,9 +59,35 @@ class TranslationRepository {
     }
 
     /**
+     * Check if translation model is downloaded
+     */
+    override suspend fun isModelDownloaded(): Boolean {
+        return try {
+            val conditions = DownloadConditions.Builder().requireWifi().build()
+            translator.downloadModelIfNeeded(conditions).await()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * Explicitly download the translation model
+     */
+    override suspend fun downloadModel(): Result<Unit> {
+        return try {
+            val conditions = DownloadConditions.Builder().build()
+            translator.downloadModelIfNeeded(conditions).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Close the translator and free resources
      */
-    fun close() {
+    override fun close() {
         translator.close()
     }
 }

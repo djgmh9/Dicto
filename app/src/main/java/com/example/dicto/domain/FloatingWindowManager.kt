@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.example.dicto.ui.floating.FloatingWindowService
+import com.example.dicto.utils.PermissionHelper
 
 /**
  * FloatingWindowManager - Manages floating window lifecycle
@@ -63,6 +64,13 @@ class FloatingWindowManager(private val context: Context) {
         } else {
             stopFloatingWindow()
         }
+    }
+
+    /**
+     * Check if overlay permission is granted
+     */
+    fun isPermissionGranted(): Boolean {
+        return PermissionHelper.canDrawOverlays(context)
     }
 }
 

@@ -26,6 +26,7 @@ import com.example.dicto.ui.screens.DictionaryScreen
 import com.example.dicto.ui.theme.DictoTheme
 import com.example.dicto.utils.AppLogger
 import com.example.dicto.utils.ClipboardMonitoringManager
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * MainActivity - Application entry point
@@ -36,6 +37,7 @@ import com.example.dicto.utils.ClipboardMonitoringManager
  * - Set the theme and compose content
  * - Log app lifecycle events
  */
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private var floatingWindowManager: FloatingWindowManager? = null
