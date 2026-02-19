@@ -1,7 +1,7 @@
 package com.example.dicto.domain
 
 import android.util.Log
-import com.example.dicto.TranslationRepository
+import com.example.dicto.data.repository.TranslationRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope

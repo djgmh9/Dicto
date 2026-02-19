@@ -2,6 +2,7 @@ package com.example.dicto
 
 import android.content.Context
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import com.example.dicto.data.local.WordStorage
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel

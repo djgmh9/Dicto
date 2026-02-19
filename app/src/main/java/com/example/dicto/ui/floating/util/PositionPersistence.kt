@@ -1,7 +1,7 @@
 package com.example.dicto.ui.floating.util
 
 import android.content.Context
-import com.example.dicto.utils.PreferencesManager
+import com.example.dicto.data.local.PreferencesManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch

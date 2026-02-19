@@ -9,7 +9,7 @@ import android.os.Build
 import android.os.IBinder
 import android.view.WindowManager
 import com.example.dicto.utils.AppLogger
-import com.example.dicto.utils.PreferencesManager
+import com.example.dicto.data.local.PreferencesManager
 import com.example.dicto.ui.floating.util.PositionPersistence
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

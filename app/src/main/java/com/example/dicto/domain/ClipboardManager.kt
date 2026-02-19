@@ -1,7 +1,7 @@
 package com.example.dicto.domain
 
 import android.util.Log
-import com.example.dicto.utils.PreferencesManager
+import com.example.dicto.data.local.PreferencesManager
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.CoroutineScope

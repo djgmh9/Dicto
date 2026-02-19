@@ -4,12 +4,14 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.dicto.data.local.WordStorage
+import com.example.dicto.data.local.PreferencesManager
+import com.example.dicto.data.repository.TranslationRepository
 import com.example.dicto.domain.ClipboardManager
 import com.example.dicto.domain.PronunciationManager
 import com.example.dicto.domain.TranslationManager
 import com.example.dicto.domain.model.DictionaryUiState
 import com.example.dicto.domain.model.WordResult
-import com.example.dicto.utils.PreferencesManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
