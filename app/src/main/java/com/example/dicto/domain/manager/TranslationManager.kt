@@ -1,4 +1,4 @@
-package com.example.dicto.domain
+package com.example.dicto.domain.manager
 
 import android.util.Log
 import com.example.dicto.data.repository.TranslationRepository

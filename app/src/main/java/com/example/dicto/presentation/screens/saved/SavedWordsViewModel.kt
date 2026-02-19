@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dicto.data.local.WordStorage
-import com.example.dicto.domain.PronunciationManager
+import com.example.dicto.domain.manager.PronunciationManager
 import com.example.dicto.domain.model.WordResult
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import com.example.dicto.data.repository.TranslationRepository
-import com.example.dicto.domain.TranslationManager
+import com.example.dicto.domain.manager.TranslationManager
 
 /**
  * SavedWordsViewModel - Handles saved words list and search

@@ -7,9 +7,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.dicto.data.local.WordStorage
 import com.example.dicto.data.local.PreferencesManager
 import com.example.dicto.data.repository.TranslationRepository
-import com.example.dicto.domain.ClipboardManager
-import com.example.dicto.domain.PronunciationManager
-import com.example.dicto.domain.TranslationManager
+import com.example.dicto.domain.manager.ClipboardManager
+import com.example.dicto.domain.manager.FloatingWindowManager
+import com.example.dicto.domain.manager.PronunciationManager
+import com.example.dicto.domain.manager.TranslationManager
 import com.example.dicto.domain.model.DictionaryUiState
 import com.example.dicto.domain.model.WordResult
 import kotlinx.coroutines.ExperimentalCoroutinesApi

@@ -1,4 +1,4 @@
-package com.example.dicto.ui
+package com.example.dicto.ui.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite

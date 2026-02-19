@@ -17,7 +17,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dicto.presentation.screens.translator.TranslatorViewModel
 import com.example.dicto.ui.theme.DictoTheme
-import com.example.dicto.utils.ClipboardMonitoringManager
+import com.example.dicto.utils.clipboard.ClipboardMonitoringManager
 
 /**
  * FloatingTranslatorActivity - Displays translator as overlay on top of other apps

@@ -18,14 +18,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import com.example.dicto.domain.FloatingWindowManager
+import com.example.dicto.domain.manager.FloatingWindowManager
 import com.example.dicto.presentation.screens.settings.SettingsViewModel
 import com.example.dicto.presentation.screens.translator.TranslatorViewModel
-import com.example.dicto.ui.AppBottomNavigation
+import com.example.dicto.ui.components.AppBottomNavigation
 import com.example.dicto.ui.screens.DictionaryScreen
 import com.example.dicto.ui.theme.DictoTheme
 import com.example.dicto.utils.AppLogger
-import com.example.dicto.utils.ClipboardMonitoringManager
+import com.example.dicto.utils.clipboard.ClipboardMonitoringManager
 import com.example.dicto.utils.logging.FloatingWindowLogger
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint

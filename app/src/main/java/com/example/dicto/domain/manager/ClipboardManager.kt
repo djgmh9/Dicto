@@ -1,11 +1,11 @@
-package com.example.dicto.domain
+package com.example.dicto.domain.manager
 
 import android.util.Log
 import com.example.dicto.data.local.PreferencesManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 
 /**
  * ClipboardManager - Handles clipboard monitoring preferences
@@ -30,14 +30,14 @@ class ClipboardManager(
      * Automatically updates when preference changes
      */
     val isMonitoringEnabled: StateFlow<Boolean> = preferencesManager.clipboardMonitoringEnabled
-        .stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Lazily, true)
+        .stateIn(scope, SharingStarted.Lazily, true)
 
     /**
      * StateFlow of floating window enabled state
      * Automatically updates when preference changes
      */
     val isFloatingWindowEnabled: StateFlow<Boolean> = preferencesManager.floatingWindowEnabled
-        .stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Lazily, false)
+        .stateIn(scope, SharingStarted.Lazily, false)
 
     /**
      * Toggle clipboard monitoring on/off and persist preference
@@ -85,8 +85,3 @@ class ClipboardManager(
      */
     fun isFloatingWindowActive(): Boolean = isFloatingWindowEnabled.value
 }
-
-
-
-
-

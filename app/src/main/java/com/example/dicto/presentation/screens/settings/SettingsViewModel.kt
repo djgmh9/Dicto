@@ -4,8 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dicto.data.local.PreferencesManager
-import com.example.dicto.domain.ClipboardManager
-import com.example.dicto.domain.FloatingWindowManager
+import com.example.dicto.domain.manager.ClipboardManager
+import com.example.dicto.domain.manager.FloatingWindowManager
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 

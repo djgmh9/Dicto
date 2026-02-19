@@ -1,8 +1,7 @@
-package com.example.dicto.domain
+package com.example.dicto.domain.manager
 
 import android.app.Application
 import android.util.Log
-import com.example.dicto.utils.TTSManager
 import kotlinx.coroutines.CoroutineScope
 
 /**

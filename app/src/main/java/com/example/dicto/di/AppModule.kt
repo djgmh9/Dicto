@@ -7,10 +7,10 @@ import com.example.dicto.data.local.PreferencesManager
 import com.example.dicto.data.local.WordStorage
 import com.example.dicto.data.repository.ITranslationRepository
 import com.example.dicto.data.repository.TranslationRepository
-import com.example.dicto.domain.ClipboardManager
-import com.example.dicto.domain.FloatingWindowManager
-import com.example.dicto.domain.PronunciationManager
-import com.example.dicto.domain.TranslationManager
+import com.example.dicto.domain.manager.ClipboardManager
+import com.example.dicto.domain.manager.FloatingWindowManager
+import com.example.dicto.domain.manager.PronunciationManager
+import com.example.dicto.domain.manager.TranslationManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
