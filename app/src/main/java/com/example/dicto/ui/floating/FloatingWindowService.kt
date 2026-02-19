@@ -39,7 +39,7 @@ class FloatingWindowService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         FloatingWindowLogger.onStartCommand()
-        return coordinator?.start() ?: START_STICKY
+        return coordinator?.start(intent) ?: START_STICKY
     }
 
     override fun onDestroy() {

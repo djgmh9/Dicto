@@ -22,7 +22,6 @@ import com.example.dicto.domain.manager.FloatingWindowManager
 import com.example.dicto.presentation.screens.settings.SettingsViewModel
 import com.example.dicto.presentation.screens.translator.TranslatorViewModel
 import com.example.dicto.ui.components.AppBottomNavigation
-import com.example.dicto.ui.floating.FloatingButtonRestoreHelper
 import com.example.dicto.ui.screens.DictionaryScreen
 import com.example.dicto.ui.theme.DictoTheme
 import com.example.dicto.utils.AppLogger
@@ -99,8 +98,6 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         FloatingWindowLogger.mainActivityOnDestroy()
-        // Restore floating button when leaving main app (matches overlay behavior)
-        FloatingButtonRestoreHelper.restoreFloatingButton(this, "MainActivity.onDestroy()")
     }
 }
 

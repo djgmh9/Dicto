@@ -1,6 +1,5 @@
 package com.example.dicto.ui.floating
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -15,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dicto.domain.manager.FloatingWindowManager
 import com.example.dicto.presentation.screens.translator.TranslatorViewModel
 import com.example.dicto.ui.theme.DictoTheme
 import com.example.dicto.utils.clipboard.ClipboardMonitoringManager
@@ -29,8 +29,13 @@ import com.example.dicto.utils.clipboard.ClipboardMonitoringManager
  * - Appears on top of current app without taking it out of focus
  */
 class FloatingTranslatorActivity : ComponentActivity() {
+
+    private lateinit var floatingWindowManager: FloatingWindowManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        floatingWindowManager = FloatingWindowManager(this)
 
         Log.d("FloatingTranslatorActivity", "Activity created")
 
@@ -93,8 +98,8 @@ class FloatingTranslatorActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d("FloatingTranslatorActivity", "Activity destroyed - restoring floating button")
-        // Use helper to restore floating button (consistent with MainActivity)
-        FloatingButtonRestoreHelper.restoreFloatingButton(this, "FloatingTranslatorActivity.onDestroy()")
+        Log.d("FloatingTranslatorActivity", "Activity destroyed - restoring floating button via ACTION_SHOW")
+        // Send ACTION_SHOW directly to the still-running service (no broadcast, no race condition)
+        floatingWindowManager.showFloatingButton()
     }
 }
