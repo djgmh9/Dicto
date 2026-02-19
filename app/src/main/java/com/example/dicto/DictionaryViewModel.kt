@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.dicto.domain.ClipboardManager
 import com.example.dicto.domain.PronunciationManager
 import com.example.dicto.domain.TranslationManager
+import com.example.dicto.domain.model.DictionaryUiState
+import com.example.dicto.domain.model.WordResult
 import com.example.dicto.utils.PreferencesManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -22,23 +24,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 
-// Data class to hold individual word results
-data class WordResult(
-    val original: String,
-    val translation: String,
-    val isSaved: Boolean = false
-)
-
-// Represents the different states of our screen
-sealed interface DictionaryUiState {
-    data object Idle : DictionaryUiState
-    data object Loading : DictionaryUiState
-    data class Error(val message: String) : DictionaryUiState
-    data class Success(
-        val fullTranslation: String,
-        val wordTranslations: List<WordResult>
-    ) : DictionaryUiState
-}
 
 /**
  * DictionaryViewModel - Main view model for the dictionary app

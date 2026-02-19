@@ -102,32 +102,33 @@ class FloatingWindowService : Service() {
                 var loadedY = 100
                 var positionLoaded = false
 
-                // Launch a coroutine to load position
+                // Launch a coroutine to load position ONCE
                 serviceScope.launch {
                     val savedX = preferencesManager?.floatingButtonX
                     val savedY = preferencesManager?.floatingButtonY
 
-                    // Combine both Flows so we only emit ONCE when both values are ready
+                    // Combine both Flows and take only the FIRST emission
                     if (savedX != null && savedY != null) {
-                        combine(savedX, savedY) { x, y -> Pair(x, y) }.collect { (x, y) ->
-                            loadedX = x
-                            loadedY = y
-                            android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService loaded position from Flow: x=$x, y=$y")
-                            AppLogger.debug("FloatingWindowService", "Loaded saved position: x=$x, y=$y")
-
-                            // NOW initialize managers with loaded position
-                            if (!positionLoaded) {
+                        combine(savedX, savedY) { x, y -> Pair(x, y) }
+                            .take(1)  // Only take the first emission to prevent spam
+                            .collect { (x, y) ->
+                                loadedX = x
+                                loadedY = y
                                 positionLoaded = true
+
+                                android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService loaded position from Flow: x=$x, y=$y")
+                                AppLogger.debug("FloatingWindowService", "Loaded saved position: x=$x, y=$y")
+
+                                // Initialize managers with loaded position
                                 android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService about to initializeManagers with x=$loadedX, y=$loadedY")
                                 initializeManagers(loadedX, loadedY)
 
-                                // THEN show the button with correct position
+                                // Show the button with correct position
                                 android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService calling buttonManager.show() with correct position")
                                 buttonManager?.show()
                                 android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowService button shown with position x=$loadedX, y=$loadedY")
                                 AppLogger.logServiceState("FloatingWindowService", "WINDOW_CREATED", "Button visible")
                             }
-                        }
                     }
                 }
 

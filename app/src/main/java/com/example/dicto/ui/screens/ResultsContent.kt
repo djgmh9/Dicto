@@ -9,7 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.dicto.DictionaryViewModel
-import com.example.dicto.DictionaryUiState
+import com.example.dicto.domain.model.DictionaryUiState
 import com.example.dicto.ui.components.*
 
 /**
