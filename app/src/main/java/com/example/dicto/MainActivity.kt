@@ -18,6 +18,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.example.dicto.domain.manager.FloatingWindowManager
 import com.example.dicto.presentation.screens.settings.SettingsViewModel
 import com.example.dicto.presentation.screens.translator.TranslatorViewModel
@@ -63,42 +65,58 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        // ==================== LIFECYCLE HANDLING ====================
+        // Use DefaultLifecycleObserver for lifecycle events (Google recommended approach)
+        // This replaces the old onStart(), onResume(), onPause(), onStop(), onDestroy() overrides
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) {
+                FloatingWindowLogger.mainActivityOnStart()
+            }
+
+            override fun onResume(owner: LifecycleOwner) {
+                FloatingWindowLogger.mainActivityOnResume()
+                // Always hide floating button when inside Dicto
+                floatingWindowManager?.stopFloatingWindow()
+                FloatingWindowLogger.mainActivityOnResumeStopFloatingWindow()
+            }
+
+            override fun onPause(owner: LifecycleOwner) {
+                FloatingWindowLogger.mainActivityOnPause()
+                // Show floating button when leaving Dicto - but only if preference is enabled
+                if (floatingWindowPreferenceEnabled) {
+                    FloatingWindowLogger.mainActivityOnPauseShowButton()
+                    floatingWindowManager?.startFloatingWindow()
+                } else {
+                    FloatingWindowLogger.warn("Floating window preference is DISABLED, NOT showing button")
+                }
+            }
+
+            override fun onStop(owner: LifecycleOwner) {
+                FloatingWindowLogger.mainActivityOnStop()
+            }
+        })
     }
 
-    override fun onStart() {
-        super.onStart()
-        FloatingWindowLogger.mainActivityOnStart()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        FloatingWindowLogger.mainActivityOnResume()
-        // Always hide floating button when inside Dicto
-        floatingWindowManager?.stopFloatingWindow()
-        FloatingWindowLogger.mainActivityOnResumeStopFloatingWindow()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        FloatingWindowLogger.mainActivityOnPause()
-        // Show floating button when leaving Dicto - but only if preference is enabled
-        if (floatingWindowPreferenceEnabled) {
-            FloatingWindowLogger.mainActivityOnPauseShowButton()
-            floatingWindowManager?.startFloatingWindow()
-        } else {
-            FloatingWindowLogger.warn("Floating window preference is DISABLED, NOT showing button")
-        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        FloatingWindowLogger.mainActivityOnStop()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        FloatingWindowLogger.mainActivityOnDestroy()
-    }
+    // ==================== LIFECYCLE METHODS REMOVED ====================
+    // The following methods have been removed and replaced with a LifecycleObserver
+    // added in onCreate():
+    //
+    // ❌ override fun onStart()
+    // ❌ override fun onResume()
+    // ❌ override fun onPause()
+    // ❌ override fun onStop()
+    // ❌ override fun onDestroy()
+    //
+    // Why? Google Architecture Recommendations state:
+    // "Do not override lifecycle methods in Activities or Fragments.
+    //  Use DefaultLifecycleObserver instead."
+    //
+    // Benefits of this approach:
+    // • Cleaner separation of concerns
+    // • Easier to test (observer logic separated from Activity)
+    // • Follows modern Android best practices
+    // • Clearer code organization
 }
 
 /**
