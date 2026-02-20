@@ -33,6 +33,8 @@ class FloatingTranslatorActivity : ComponentActivity() {
     private lateinit var floatingWindowManager: FloatingWindowManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Instant appear: Disable enter animation by calling before super.onCreate
+        overridePendingTransition(0, 0)
         super.onCreate(savedInstanceState)
 
         floatingWindowManager = FloatingWindowManager(this)
@@ -84,6 +86,12 @@ class FloatingTranslatorActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun finish() {
+        super.finish()
+        // Fade out animation when exiting the overlay
+        overridePendingTransition(0, android.R.anim.fade_out)
     }
 
     /**

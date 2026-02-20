@@ -119,7 +119,7 @@ class PositionPersistenceTest {
 
     @Test
     fun `constrainPositionToBounds - x too far left clamped to minX`() {
-        // Screen 1080px wide, BUTTON_SIZE=150 → minX = -75
+        // Screen 320px wide (Robolectric default), BUTTON_SIZE=150 → minX = -75
         val (x, _) = persistence().constrainPositionToBounds(-9999, 100)
         assertEquals(-75, x)
     }
@@ -127,8 +127,8 @@ class PositionPersistenceTest {
     @Test
     fun `constrainPositionToBounds - x too far right clamped to maxX`() {
         // maxX = screenWidth - 75
-        val (x, _) = persistence().constrainPositionToBounds(9999, 100)
         val screenWidth = RuntimeEnvironment.getApplication().resources.displayMetrics.widthPixels
+        val (x, _) = persistence().constrainPositionToBounds(9999, 100)
         assertEquals(screenWidth - 75, x)
     }
 
@@ -141,15 +141,16 @@ class PositionPersistenceTest {
     @Test
     fun `constrainPositionToBounds - y below bottom clamped to maxY`() {
         val screenHeight = RuntimeEnvironment.getApplication().resources.displayMetrics.heightPixels
-        val (_, y) = persistence().constrainPositionToBounds(0, 9999)
+        val (x, y) = persistence().constrainPositionToBounds(0, 9999)
         assertEquals(screenHeight - 150, y)
     }
 
     @Test
     fun `constrainPositionToBounds - valid position unchanged`() {
-        val (x, y) = persistence().constrainPositionToBounds(200, 400)
-        assertEquals(200, x)
-        assertEquals(400, y)
+        // Use a position that is definitely within Robolectric default bounds (usually 320x470)
+        val (x, y) = persistence().constrainPositionToBounds(50, 50)
+        assertEquals(50, x)
+        assertEquals(50, y)
     }
 
     // ─────────────────────────────────────────────────────────────────────────

@@ -128,11 +128,10 @@ class FloatingWindowCoordinatorTest {
     @Test
     fun `handleShowAction - calls show when button is hidden`() {
         val fake = FakeButtonManager()
-        fake.show()  // make visible
-        fake.hide()  // now hidden
-        assertEquals(0, fake.showCallCount) // showCallCount is 0 after reset below
-
-        // Reset to track only the handleShowAction call
+        // Ensure it's hidden
+        fake.hide()
+        
+        // Reset show count to 0 before the actual test
         fake.showCallCount = 0
 
         // Simulate handleShowAction logic
@@ -141,6 +140,7 @@ class FloatingWindowCoordinatorTest {
         }
 
         assertEquals(1, fake.showCallCount)
+        assertTrue(fake.isVisible())
     }
 
     @Test
@@ -167,7 +167,9 @@ class FloatingWindowCoordinatorTest {
     @Test
     fun `handleShowAction - is no-op when called multiple times rapidly`() {
         val fake = FakeButtonManager()
-        fake.show()
+        // Ensure hidden initially
+        fake.hide()
+        fake.showCallCount = 0
 
         // Simulate 3 rapid ACTION_SHOW deliveries
         repeat(3) {

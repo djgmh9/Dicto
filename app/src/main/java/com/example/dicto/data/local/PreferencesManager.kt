@@ -1,6 +1,8 @@
 package com.example.dicto.data.local
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -26,7 +28,13 @@ import kotlinx.coroutines.flow.map
 
 private val Context.preferencesDataStore by preferencesDataStore(name = "app_preferences")
 
-class PreferencesManager(private val context: Context) {
+class PreferencesManager(
+    private val context: Context,
+    private val dataStore: DataStore<Preferences>? = null
+) {
+    // Use provided dataStore (for tests) or the singleton from context
+    private val internalDataStore: DataStore<Preferences> 
+        get() = dataStore ?: context.preferencesDataStore
 
     companion object {
         // Preference keys
@@ -46,7 +54,7 @@ class PreferencesManager(private val context: Context) {
      * Observable clipboard monitoring preference
      * Emits saved value on subscribe, then any changes
      */
-    val clipboardMonitoringEnabled: Flow<Boolean> = context.preferencesDataStore.data
+    val clipboardMonitoringEnabled: Flow<Boolean> = internalDataStore.data
         .map { preferences ->
             preferences[CLIPBOARD_MONITORING_KEY] ?: DEFAULT_CLIPBOARD_MONITORING
         }
@@ -55,7 +63,7 @@ class PreferencesManager(private val context: Context) {
      * Observable floating window preference
      * Emits saved value on subscribe, then any changes
      */
-    val floatingWindowEnabled: Flow<Boolean> = context.preferencesDataStore.data
+    val floatingWindowEnabled: Flow<Boolean> = internalDataStore.data
         .map { preferences ->
             preferences[FLOATING_WINDOW_KEY] ?: DEFAULT_FLOATING_WINDOW
         }
@@ -63,7 +71,7 @@ class PreferencesManager(private val context: Context) {
     /**
      * Observable floating button X position
      */
-    val floatingButtonX: Flow<Int> = context.preferencesDataStore.data
+    val floatingButtonX: Flow<Int> = internalDataStore.data
         .map { preferences ->
             preferences[FLOATING_BUTTON_X_KEY] ?: DEFAULT_BUTTON_X
         }
@@ -71,7 +79,7 @@ class PreferencesManager(private val context: Context) {
     /**
      * Observable floating button Y position
      */
-    val floatingButtonY: Flow<Int> = context.preferencesDataStore.data
+    val floatingButtonY: Flow<Int> = internalDataStore.data
         .map { preferences ->
             preferences[FLOATING_BUTTON_Y_KEY] ?: DEFAULT_BUTTON_Y
         }
@@ -82,7 +90,7 @@ class PreferencesManager(private val context: Context) {
      * @param enabled Whether clipboard monitoring should be enabled
      */
     suspend fun setClipboardMonitoringEnabled(enabled: Boolean) {
-        context.preferencesDataStore.edit { preferences ->
+        internalDataStore.edit { preferences ->
             preferences[CLIPBOARD_MONITORING_KEY] = enabled
         }
     }
@@ -93,7 +101,7 @@ class PreferencesManager(private val context: Context) {
      * @param enabled Whether floating window should be enabled
      */
     suspend fun setFloatingWindowEnabled(enabled: Boolean) {
-        context.preferencesDataStore.edit { preferences ->
+        internalDataStore.edit { preferences ->
             preferences[FLOATING_WINDOW_KEY] = enabled
         }
     }
@@ -105,10 +113,9 @@ class PreferencesManager(private val context: Context) {
      * @param y Y coordinate of button
      */
     suspend fun setFloatingButtonPosition(x: Int, y: Int) {
-        context.preferencesDataStore.edit { preferences ->
+        internalDataStore.edit { preferences ->
             preferences[FLOATING_BUTTON_X_KEY] = x
             preferences[FLOATING_BUTTON_Y_KEY] = y
         }
     }
 }
-
