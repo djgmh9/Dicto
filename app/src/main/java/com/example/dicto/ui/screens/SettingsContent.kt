@@ -8,7 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dicto.presentation.screens.settings.SettingsViewModel
 import com.example.dicto.utils.AppLogger
 import com.example.dicto.utils.PermissionHelper
@@ -28,8 +28,8 @@ fun SettingsContent(
     viewModel: SettingsViewModel
 ) {
     val context = LocalContext.current
-    val clipboardMonitoringEnabled by viewModel.clipboardMonitoringEnabled.collectAsState()
-    val floatingWindowEnabled by viewModel.floatingWindowEnabled.collectAsState()
+    val clipboardMonitoringEnabled by viewModel.clipboardMonitoringEnabled.collectAsStateWithLifecycle()
+    val floatingWindowEnabled by viewModel.floatingWindowEnabled.collectAsStateWithLifecycle()
 
     // Log the current state when composing
     FloatingWindowLogger.settingsContentRecomposed(floatingWindowEnabled)

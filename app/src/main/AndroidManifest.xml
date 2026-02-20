@@ -35,7 +35,8 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:launchMode="singleTask"
             android:taskAffinity=""
-            android:noHistory="false" />
+            android:excludeFromRecents="true"
+            android:noHistory="true" />
 
         <!-- Floating window service for tap-to-translate feature -->
         <service
