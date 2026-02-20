@@ -46,6 +46,10 @@ class FloatingWindowCoordinator(private val service: Service) {
     private var positionPersistence: PositionPersistence? = null
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
+    
+    // Flag to track if the button is being removed (trashed), 
+    // to prevent saving its position inside the trash bin.
+    private var isRemoving = false
 
     fun initialize() {
         FloatingWindowLogger.serviceCreated()
@@ -120,20 +124,25 @@ class FloatingWindowCoordinator(private val service: Service) {
         android.util.Log.d("DICTO_FLOATING", ">>> [CLEANUP_START] Cleaning up floating window service")
 
         try {
-            // Save current button position synchronously before destroying
-            val position = buttonManager?.getCurrentPosition()
-            if (position != null) {
-                val (x, y) = position
-                android.util.Log.d("DICTO_FLOATING", ">>> [CLEANUP] Saving position: x=$x, y=$y")
-                try {
-                    kotlinx.coroutines.runBlocking {
-                        positionPersistence?.savePositionSync(x, y)
+            // Only save position if the button wasn't dropped in the trash bin.
+            // This prevents the button from respawning at the bottom center (trash location).
+            if (!isRemoving) {
+                val position = buttonManager?.getCurrentPosition()
+                if (position != null) {
+                    val (x, y) = position
+                    android.util.Log.d("DICTO_FLOATING", ">>> [CLEANUP] Saving position: x=$x, y=$y")
+                    try {
+                        kotlinx.coroutines.runBlocking {
+                            positionPersistence?.savePositionSync(x, y)
+                        }
+                        android.util.Log.d("DICTO_FLOATING", ">>> [CLEANUP] Position saved: x=$x, y=$y")
+                        FloatingWindowLogger.positionSaved(x, y)
+                    } catch (e: Exception) {
+                        android.util.Log.e("DICTO_FLOATING", ">>> [CLEANUP] Error saving position: ${e.message}", e)
                     }
-                    android.util.Log.d("DICTO_FLOATING", ">>> [CLEANUP] Position saved: x=$x, y=$y")
-                    FloatingWindowLogger.positionSaved(x, y)
-                } catch (e: Exception) {
-                    android.util.Log.e("DICTO_FLOATING", ">>> [CLEANUP] Error saving position: ${e.message}", e)
                 }
+            } else {
+                android.util.Log.d("DICTO_FLOATING", ">>> [CLEANUP] Skipping position save because button was trashed")
             }
 
             trashBinManager?.destroy()
@@ -237,6 +246,7 @@ class FloatingWindowCoordinator(private val service: Service) {
     private fun onDragEnd(x: Float, y: Float, finalX: Int, finalY: Int, wasDragging: Boolean) {
         if (wasDragging && trashBinManager?.isNear(x, y) == true) {
             AppLogger.logUserAction("Floating Button", "Dropped on trash - closing")
+            isRemoving = true
             service.stopSelf()
         } else if (wasDragging) {
             positionPersistence?.savePosition(finalX, finalY)
