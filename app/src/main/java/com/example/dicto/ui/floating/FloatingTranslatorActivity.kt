@@ -13,11 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.dicto.domain.manager.FloatingWindowManager
 import com.example.dicto.presentation.screens.translator.TranslatorViewModel
 import com.example.dicto.ui.theme.DictoTheme
 import com.example.dicto.utils.clipboard.ClipboardMonitoringManager
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * FloatingTranslatorActivity - Displays translator as overlay on top of other apps
@@ -28,6 +29,7 @@ import com.example.dicto.utils.clipboard.ClipboardMonitoringManager
  * - Lifecycle-aware clipboard monitoring
  * - Appears on top of current app without taking it out of focus
  */
+@AndroidEntryPoint
 class FloatingTranslatorActivity : ComponentActivity() {
 
     private lateinit var floatingWindowManager: FloatingWindowManager
@@ -54,7 +56,7 @@ class FloatingTranslatorActivity : ComponentActivity() {
                         .background(Color.Transparent),
                     color = Color.Transparent
                 ) {
-                    val viewModel: TranslatorViewModel = viewModel()
+                    val viewModel: TranslatorViewModel = hiltViewModel()
                     val context = LocalContext.current
                     val lifecycleOwner = LocalLifecycleOwner.current
                     var shouldClose by remember { mutableStateOf(false) }

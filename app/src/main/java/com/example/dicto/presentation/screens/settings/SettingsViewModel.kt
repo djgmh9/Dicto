@@ -1,13 +1,14 @@
 package com.example.dicto.presentation.screens.settings
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dicto.data.local.PreferencesManager
 import com.example.dicto.domain.manager.ClipboardManager
 import com.example.dicto.domain.manager.FloatingWindowManager
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * SettingsViewModel - Handles app settings and preferences
@@ -24,11 +25,12 @@ import kotlinx.coroutines.launch
  * - FloatingWindowManager: Floating window coordination
  * - PreferencesManager: Preferences persistence
  */
-class SettingsViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val preferencesManager = PreferencesManager(application)
-    private val clipboardManager = ClipboardManager(preferencesManager, viewModelScope)
-    private val floatingWindowManager = FloatingWindowManager(application)
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
+    private val preferencesManager: PreferencesManager,
+    private val clipboardManager: ClipboardManager,
+    private val floatingWindowManager: FloatingWindowManager
+) : ViewModel() {
 
     // ==================== SETTINGS STATE ====================
 

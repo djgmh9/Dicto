@@ -1,14 +1,13 @@
 package com.example.dicto.presentation.screens.translator
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dicto.data.local.WordStorage
-import com.example.dicto.data.repository.TranslationRepository
 import com.example.dicto.domain.manager.PronunciationManager
 import com.example.dicto.domain.manager.TranslationManager
 import com.example.dicto.domain.model.DictionaryUiState
 import com.example.dicto.domain.model.WordResult
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +21,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * TranslatorViewModel - Handles translation-specific UI state
@@ -39,11 +39,12 @@ import kotlinx.coroutines.launch
  * - PronunciationManager: TTS
  * - WordStorage: Word persistence
  */
-class TranslatorViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val translationManager = TranslationManager(TranslationRepository())
-    private val pronunciationManager = PronunciationManager(application, viewModelScope)
-    private val storage = WordStorage(application)
+@HiltViewModel
+class TranslatorViewModel @Inject constructor(
+    private val translationManager: TranslationManager,
+    private val pronunciationManager: PronunciationManager,
+    private val storage: WordStorage
+) : ViewModel() {
 
     // ==================== SEARCH INPUT ====================
     private val _searchQuery = MutableStateFlow("")

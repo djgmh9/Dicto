@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.dicto.presentation.screens.translator.TranslatorViewModel
 import com.example.dicto.presentation.screens.saved.SavedWordsViewModel
 import com.example.dicto.presentation.screens.settings.SettingsViewModel
@@ -26,10 +26,10 @@ import com.example.dicto.presentation.screens.settings.SettingsViewModel
 fun DictionaryScreen(
     modifier: Modifier = Modifier,
     selectedTab: Int,
-    translatorViewModel: TranslatorViewModel = viewModel(),
-    settingsViewModel: SettingsViewModel = viewModel()
+    translatorViewModel: TranslatorViewModel = hiltViewModel(),
+    settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
-    val savedWordsViewModel: SavedWordsViewModel = viewModel()
+    val savedWordsViewModel: SavedWordsViewModel = hiltViewModel()
 
     Box(modifier = modifier.fillMaxSize()) {
         when (selectedTab) {
