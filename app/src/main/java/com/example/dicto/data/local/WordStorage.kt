@@ -10,27 +10,32 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 /**
- * WordStorage - Local storage for saved vocabulary words
+ * WordStorage - Interface for local storage of saved vocabulary words
  *
  * Data Layer Component
  * Responsibilities:
- * - Persist saved words using DataStore
+ * - Persist saved words using DataStore (in concrete implementation)
  * - Provide reactive stream of saved words
  * - Toggle word save/unsave state
  *
- * Uses DataStore for:
- * - Type-safe persistent storage
- * - Coroutine-based async operations
- * - Flow-based reactive updates
+ * This interface defines the contract for word storage, allowing for
+ * different implementations (e.g., in-memory for testing, DataStore for production).
  */
+interface WordStorage {
+    val savedWordsFlow: Flow<Set<String>>
+    suspend fun toggleWord(word: String)
+}
 
+/**
+ * DefaultWordStorage - Concrete implementation of WordStorage using DataStore
+ */
 // Create the extension property for DataStore
 private val Context.dataStore by preferencesDataStore(name = "saved_words_prefs")
 
-class WordStorage(
+class DefaultWordStorage(
     private val context: Context,
     private val dataStore: DataStore<Preferences>? = null
-) {
+) : WordStorage {
     private val internalDataStore: DataStore<Preferences>
         get() = dataStore ?: context.dataStore
 
@@ -39,13 +44,13 @@ class WordStorage(
 
     // Expose a "Flow" (a stream of data) that updates whenever the list changes
     // Returns words in last-added-first order
-    val savedWordsFlow: Flow<Set<String>> = internalDataStore.data
+    override val savedWordsFlow: Flow<Set<String>> = internalDataStore.data
         .map { preferences ->
             preferences[SAVED_WORDS_KEY] ?: emptySet()
         }
 
     // Function to toggle (Save/Unsave) a word
-    suspend fun toggleWord(word: String) {
+    override suspend fun toggleWord(word: String) {
         internalDataStore.edit { preferences ->
             val currentWords = preferences[SAVED_WORDS_KEY] ?: emptySet()
             if (currentWords.contains(word)) {

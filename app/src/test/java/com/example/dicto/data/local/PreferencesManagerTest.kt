@@ -24,7 +24,7 @@ class PreferencesManagerTest {
     @Before
     fun setUp() {
         context = RuntimeEnvironment.getApplication()
-        preferencesManager = PreferencesManager(context)
+        preferencesManager = DefaultPreferencesManager(context)
     }
 
     @Test

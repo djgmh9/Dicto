@@ -11,29 +11,33 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 /**
- * PreferencesManager - Handles app preferences with DataStore
+ * PreferencesManager - Interface for app preferences with DataStore
  *
- * Data Layer Component
- * Single Responsibility: Persist and retrieve user preferences
- * Features:
- * - Type-safe preference access
- * - Reactive preference updates via Flow
- * - Easy to extend for new preferences
- *
- * Currently manages:
- * - clipboardMonitoringEnabled: Auto-translate from clipboard setting
- * - floatingWindowEnabled: Floating translator toggle
- * - floatingButtonX/Y: Button position persistence
+ * This interface defines the contract for preference management, allowing for
+ * different implementations (e.g., in-memory for testing, DataStore for production).
  */
+interface PreferencesManager {
+    val clipboardMonitoringEnabled: Flow<Boolean>
+    val floatingWindowEnabled: Flow<Boolean>
+    val floatingButtonX: Flow<Int>
+    val floatingButtonY: Flow<Int>
 
+    suspend fun setClipboardMonitoringEnabled(enabled: Boolean)
+    suspend fun setFloatingWindowEnabled(enabled: Boolean)
+    suspend fun setFloatingButtonPosition(x: Int, y: Int)
+}
+
+/**
+ * DefaultPreferencesManager - Concrete implementation of PreferencesManager using DataStore
+ */
 private val Context.preferencesDataStore by preferencesDataStore(name = "app_preferences")
 
-class PreferencesManager(
+class DefaultPreferencesManager(
     private val context: Context,
     private val dataStore: DataStore<Preferences>? = null
-) {
+) : PreferencesManager {
     // Use provided dataStore (for tests) or the singleton from context
-    private val internalDataStore: DataStore<Preferences> 
+    private val internalDataStore: DataStore<Preferences>
         get() = dataStore ?: context.preferencesDataStore
 
     companion object {
@@ -54,7 +58,7 @@ class PreferencesManager(
      * Observable clipboard monitoring preference
      * Emits saved value on subscribe, then any changes
      */
-    val clipboardMonitoringEnabled: Flow<Boolean> = internalDataStore.data
+    override val clipboardMonitoringEnabled: Flow<Boolean> = internalDataStore.data
         .map { preferences ->
             preferences[CLIPBOARD_MONITORING_KEY] ?: DEFAULT_CLIPBOARD_MONITORING
         }
@@ -63,7 +67,7 @@ class PreferencesManager(
      * Observable floating window preference
      * Emits saved value on subscribe, then any changes
      */
-    val floatingWindowEnabled: Flow<Boolean> = internalDataStore.data
+    override val floatingWindowEnabled: Flow<Boolean> = internalDataStore.data
         .map { preferences ->
             preferences[FLOATING_WINDOW_KEY] ?: DEFAULT_FLOATING_WINDOW
         }
@@ -71,7 +75,7 @@ class PreferencesManager(
     /**
      * Observable floating button X position
      */
-    val floatingButtonX: Flow<Int> = internalDataStore.data
+    override val floatingButtonX: Flow<Int> = internalDataStore.data
         .map { preferences ->
             preferences[FLOATING_BUTTON_X_KEY] ?: DEFAULT_BUTTON_X
         }
@@ -79,7 +83,7 @@ class PreferencesManager(
     /**
      * Observable floating button Y position
      */
-    val floatingButtonY: Flow<Int> = internalDataStore.data
+    override val floatingButtonY: Flow<Int> = internalDataStore.data
         .map { preferences ->
             preferences[FLOATING_BUTTON_Y_KEY] ?: DEFAULT_BUTTON_Y
         }
@@ -89,7 +93,7 @@ class PreferencesManager(
      *
      * @param enabled Whether clipboard monitoring should be enabled
      */
-    suspend fun setClipboardMonitoringEnabled(enabled: Boolean) {
+    override suspend fun setClipboardMonitoringEnabled(enabled: Boolean) {
         internalDataStore.edit { preferences ->
             preferences[CLIPBOARD_MONITORING_KEY] = enabled
         }
@@ -100,7 +104,7 @@ class PreferencesManager(
      *
      * @param enabled Whether floating window should be enabled
      */
-    suspend fun setFloatingWindowEnabled(enabled: Boolean) {
+    override suspend fun setFloatingWindowEnabled(enabled: Boolean) {
         internalDataStore.edit { preferences ->
             preferences[FLOATING_WINDOW_KEY] = enabled
         }
@@ -112,7 +116,7 @@ class PreferencesManager(
      * @param x X coordinate of button
      * @param y Y coordinate of button
      */
-    suspend fun setFloatingButtonPosition(x: Int, y: Int) {
+    override suspend fun setFloatingButtonPosition(x: Int, y: Int) {
         internalDataStore.edit { preferences ->
             preferences[FLOATING_BUTTON_X_KEY] = x
             preferences[FLOATING_BUTTON_Y_KEY] = y

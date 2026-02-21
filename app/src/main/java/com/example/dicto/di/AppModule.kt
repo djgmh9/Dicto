@@ -3,12 +3,17 @@ package com.example.dicto.di
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.viewModelScope
+import com.example.dicto.data.local.DefaultPreferencesManager
+import com.example.dicto.data.local.DefaultWordStorage
 import com.example.dicto.data.local.PreferencesManager
 import com.example.dicto.data.local.WordStorage
 import com.example.dicto.data.repository.ITranslationRepository
 import com.example.dicto.data.repository.TranslationRepository
 import com.example.dicto.domain.manager.ClipboardManager
 import com.example.dicto.domain.manager.FloatingWindowManager
+import com.example.dicto.domain.manager.IClipboardManager
+import com.example.dicto.domain.manager.IFloatingWindowManager
+import com.example.dicto.domain.manager.IPronunciationManager
 import com.example.dicto.domain.manager.PronunciationManager
 import com.example.dicto.domain.manager.TranslationManager
 import dagger.Module
@@ -54,7 +59,7 @@ object AppModule {
     fun providePreferencesManager(
         @ApplicationContext context: Context
     ): PreferencesManager {
-        return PreferencesManager(context)
+        return DefaultPreferencesManager(context)
     }
 
     @Provides
@@ -62,7 +67,7 @@ object AppModule {
     fun provideWordStorage(
         @ApplicationContext context: Context
     ): WordStorage {
-        return WordStorage(context)
+        return DefaultWordStorage(context)
     }
 
     // ==================== DOMAIN LAYER ====================
@@ -72,7 +77,7 @@ object AppModule {
     fun provideTranslationManager(
         repository: ITranslationRepository
     ): TranslationManager {
-        return TranslationManager(repository as TranslationRepository)
+        return TranslationManager(repository)
     }
 
     @Provides
@@ -80,7 +85,7 @@ object AppModule {
     fun provideClipboardManager(
         preferencesManager: PreferencesManager,
         @ApplicationScope scope: CoroutineScope
-    ): ClipboardManager {
+    ): IClipboardManager {
         return ClipboardManager(preferencesManager, scope)
     }
 
@@ -88,7 +93,7 @@ object AppModule {
     @Singleton
     fun provideFloatingWindowManager(
         @ApplicationContext context: Context
-    ): FloatingWindowManager {
+    ): IFloatingWindowManager {
         return FloatingWindowManager(context)
     }
 
@@ -97,7 +102,7 @@ object AppModule {
     fun providePronunciationManager(
         @ApplicationContext context: Context,
         @ApplicationScope scope: CoroutineScope
-    ): PronunciationManager {
+    ): IPronunciationManager {
         return PronunciationManager(context as Application, scope)
     }
 }

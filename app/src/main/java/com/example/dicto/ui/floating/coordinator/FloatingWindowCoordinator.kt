@@ -10,6 +10,7 @@ import com.example.dicto.ui.floating.FloatingTranslatorActivity
 import com.example.dicto.ui.floating.TrashBinManager
 import com.example.dicto.utils.notification.NotificationHelper
 import com.example.dicto.data.local.PositionPersistence
+import com.example.dicto.data.local.DefaultPreferencesManager
 import com.example.dicto.data.local.PreferencesManager
 import com.example.dicto.utils.AppLogger
 import com.example.dicto.utils.logging.FloatingWindowLogger
@@ -56,7 +57,7 @@ class FloatingWindowCoordinator(private val service: Service) {
         AppLogger.logServiceState("FloatingWindowCoordinator", "INITIALIZING")
 
         windowManager = service.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        preferencesManager = PreferencesManager(service)
+        preferencesManager = DefaultPreferencesManager(service)
         positionPersistence = PositionPersistence(service, preferencesManager!!, serviceScope)
         notificationHelper = NotificationHelper(service)
         notificationHelper?.createNotificationChannel()

@@ -22,7 +22,7 @@ import kotlinx.coroutines.CoroutineScope
 class PronunciationManager(
     application: Application,
     viewModelScope: CoroutineScope
-) {
+) : IPronunciationManager {
     private val ttsManager = TTSManager(application, viewModelScope).apply {
         initialize(
             onSuccess = {
@@ -37,7 +37,7 @@ class PronunciationManager(
     /**
      * Pronounce word/text in Arabic (source language)
      */
-    fun speakArabic(text: String) {
+    override fun speakArabic(text: String) {
         if (text.isNotBlank()) {
             ttsManager.speak(text, java.util.Locale("ar"), onComplete = {
                 Log.d("PronunciationManager", "Finished pronouncing Arabic: $text")
@@ -50,7 +50,7 @@ class PronunciationManager(
     /**
      * Pronounce word/text in English (target language)
      */
-    fun speakEnglish(text: String) {
+    override fun speakEnglish(text: String) {
         if (text.isNotBlank()) {
             ttsManager.speak(text, java.util.Locale.ENGLISH, onComplete = {
                 Log.d("PronunciationManager", "Finished pronouncing English: $text")
@@ -63,7 +63,7 @@ class PronunciationManager(
     /**
      * Stop current pronunciation
      */
-    fun stop() {
+    override fun stop() {
         ttsManager.stop()
         Log.d("PronunciationManager", "Stopped pronunciation")
     }
@@ -71,7 +71,7 @@ class PronunciationManager(
     /**
      * Shutdown TTS Manager and clean up resources
      */
-    fun shutdown() {
+    override fun shutdown() {
         ttsManager.shutdown()
         Log.d("PronunciationManager", "TTS Manager shutdown")
     }

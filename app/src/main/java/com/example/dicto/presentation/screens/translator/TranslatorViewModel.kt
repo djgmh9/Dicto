@@ -3,7 +3,7 @@ package com.example.dicto.presentation.screens.translator
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dicto.data.local.WordStorage
-import com.example.dicto.domain.manager.PronunciationManager
+import com.example.dicto.domain.manager.IPronunciationManager
 import com.example.dicto.domain.manager.TranslationManager
 import com.example.dicto.domain.model.DictionaryUiState
 import com.example.dicto.domain.model.WordResult
@@ -42,7 +42,7 @@ import javax.inject.Inject
 @HiltViewModel
 class TranslatorViewModel @Inject constructor(
     private val translationManager: TranslationManager,
-    private val pronunciationManager: PronunciationManager,
+    private val pronunciationManager: IPronunciationManager,
     private val storage: WordStorage
 ) : ViewModel() {
 

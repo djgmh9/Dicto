@@ -20,10 +20,10 @@ import com.example.dicto.utils.PermissionHelper
  *   leaving overlay - service stays alive, button is just made visible).
  * - hideFloatingButton(): Sends ACTION_HIDE to the running service.
  */
-class FloatingWindowManager(private val context: Context) {
+class FloatingWindowManager(private val context: Context) : IFloatingWindowManager {
 
     /** Start service (first launch from background) */
-    fun startFloatingWindow() {
+    override fun startFloatingWindow() {
         try {
             android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowManager.startFloatingWindow() called")
             val intent = Intent(context, FloatingWindowService::class.java)
@@ -37,7 +37,7 @@ class FloatingWindowManager(private val context: Context) {
     }
 
     /** Stop service entirely (called when entering main app) */
-    fun stopFloatingWindow() {
+    override fun stopFloatingWindow() {
         try {
             android.util.Log.d("DICTO_FLOATING", ">>> [BEFORE_STOP] FloatingWindowManager.stopFloatingWindow() - STOPPING SERVICE")
             val intent = Intent(context, FloatingWindowService::class.java)
@@ -54,7 +54,7 @@ class FloatingWindowManager(private val context: Context) {
      * Show floating button instantly without restarting the service.
      * Use this when returning from the overlay - service is already running.
      */
-    fun showFloatingButton() {
+    override fun showFloatingButton() {
         try {
             android.util.Log.d("DICTO_FLOATING", ">>> FloatingWindowManager.showFloatingButton() - sending ACTION_SHOW")
             val intent = Intent(context, FloatingWindowService::class.java).apply {
@@ -85,7 +85,7 @@ class FloatingWindowManager(private val context: Context) {
     /**
      * Check if overlay permission is granted
      */
-    fun isPermissionGranted(): Boolean {
+    override fun isPermissionGranted(): Boolean {
         return PermissionHelper.canDrawOverlays(context)
     }
 }

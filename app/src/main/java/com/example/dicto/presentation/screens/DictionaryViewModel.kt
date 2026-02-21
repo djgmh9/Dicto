@@ -4,6 +4,8 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.dicto.data.local.DefaultWordStorage
+import com.example.dicto.data.local.DefaultPreferencesManager
 import com.example.dicto.data.local.WordStorage
 import com.example.dicto.data.local.PreferencesManager
 import com.example.dicto.data.repository.TranslationRepository
@@ -64,8 +66,8 @@ class DictionaryViewModel(application: Application) : AndroidViewModel(applicati
     // MANAGERS - Each handles one specific concern
     private val translationManager = TranslationManager(TranslationRepository())
     private val pronunciationManager = PronunciationManager(application, viewModelScope)
-    private val clipboardManager = ClipboardManager(PreferencesManager(application), viewModelScope)
-    private val storage = WordStorage(application)
+    private val clipboardManager = ClipboardManager(DefaultPreferencesManager(application), viewModelScope)
+    private val storage: WordStorage = DefaultWordStorage(application)
 
     // 1. INPUT: The text the user types
     private val _searchQuery = MutableStateFlow("")

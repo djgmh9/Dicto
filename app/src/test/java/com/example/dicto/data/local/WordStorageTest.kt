@@ -24,7 +24,7 @@ class WordStorageTest {
     @Before
     fun setUp() {
         context = RuntimeEnvironment.getApplication()
-        wordStorage = WordStorage(context)
+        wordStorage = DefaultWordStorage(context)
     }
 
     @Test

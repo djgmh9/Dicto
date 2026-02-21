@@ -3,8 +3,8 @@ package com.example.dicto.presentation.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dicto.data.local.PreferencesManager
-import com.example.dicto.domain.manager.ClipboardManager
-import com.example.dicto.domain.manager.FloatingWindowManager
+import com.example.dicto.domain.manager.IClipboardManager
+import com.example.dicto.domain.manager.IFloatingWindowManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -28,8 +28,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
-    private val clipboardManager: ClipboardManager,
-    private val floatingWindowManager: FloatingWindowManager
+    private val clipboardManager: IClipboardManager,
+    private val floatingWindowManager: IFloatingWindowManager
 ) : ViewModel() {
 
     // ==================== SETTINGS STATE ====================

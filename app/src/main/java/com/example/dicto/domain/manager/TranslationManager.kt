@@ -1,7 +1,7 @@
 package com.example.dicto.domain.manager
 
 import android.util.Log
-import com.example.dicto.data.repository.TranslationRepository
+import com.example.dicto.data.repository.ITranslationRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -21,7 +21,7 @@ import kotlinx.coroutines.coroutineScope
  * - Clear separation of concerns
  */
 class TranslationManager(
-    private val repository: TranslationRepository
+    private val repository: ITranslationRepository
 ) {
     /**
      * Translate a full sentence

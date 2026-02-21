@@ -34,6 +34,7 @@ class FloatingButtonView(
 
     private var floatingView: ImageView? = null
     private var layoutParams: WindowManager.LayoutParams? = null
+    private var isVisibleFlag: Boolean = false
 
     /**
      * Create and add button to window
@@ -44,15 +45,17 @@ class FloatingButtonView(
 
         if (floatingView != null) {
             // Button already created - just re-add to window if not visible
-            if (floatingView?.windowToken != null) {
+            if (isVisibleFlag) {
                 // Already visible, nothing to do
                 AppLogger.debug("FloatingButtonView", "Button already visible, skipping")
+                android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView - Button already visible")
                 return
             }
             // Re-add existing view with existing layoutParams (preserves position)
             android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView - Re-adding hidden button to window")
             try {
                 windowManager.addView(floatingView, layoutParams)
+                isVisibleFlag = true
                 android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView - Button re-added to window")
                 AppLogger.debug("FloatingButtonView", "Floating button re-added to window")
             } catch (e: Exception) {
@@ -70,6 +73,7 @@ class FloatingButtonView(
         FloatingWindowLogger.floatingButtonAboutToAdd()
         android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView - About to addView")
         windowManager.addView(floatingView, params)
+        isVisibleFlag = true
         android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView - Button added to window")
         FloatingWindowLogger.floatingButtonAdded()
         AppLogger.debug("FloatingButtonView", "Floating button created and shown")
@@ -81,9 +85,10 @@ class FloatingButtonView(
     fun hide() {
         FloatingWindowLogger.floatingButtonViewHide()
         try {
-            if (floatingView != null && floatingView?.windowToken != null) {
+            if (floatingView != null && isVisibleFlag) {
                 FloatingWindowLogger.floatingButtonRemoving()
                 windowManager.removeView(floatingView)
+                isVisibleFlag = false
                 FloatingWindowLogger.floatingButtonRemoved()
                 AppLogger.debug("FloatingButtonView", "Floating button hidden")
             }
@@ -99,9 +104,10 @@ class FloatingButtonView(
     fun restore() {
         FloatingWindowLogger.floatingButtonRestore()
         try {
-            if (floatingView != null && layoutParams != null && floatingView?.windowToken == null) {
+            if (floatingView != null && layoutParams != null && !isVisibleFlag) {
                 FloatingWindowLogger.floatingButtonRestoreReadding()
                 windowManager.addView(floatingView, layoutParams)
+                isVisibleFlag = true
                 FloatingWindowLogger.floatingButtonRestored()
                 AppLogger.debug("FloatingButtonView", "Floating button restored")
             }
@@ -117,11 +123,12 @@ class FloatingButtonView(
     fun destroy() {
         android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView.destroy() called")
         try {
-            if (floatingView != null && floatingView?.windowToken != null) {
+            if (floatingView != null && isVisibleFlag) {
                 windowManager.removeView(floatingView)
             }
             floatingView = null
             layoutParams = null
+            isVisibleFlag = false
             android.util.Log.d("DICTO_FLOATING", ">>> FloatingButtonView destroyed")
             AppLogger.debug("FloatingButtonView", "Floating button destroyed")
         } catch (e: Exception) {
@@ -133,7 +140,7 @@ class FloatingButtonView(
     /**
      * Check if button is currently visible
      */
-    fun isVisible(): Boolean = floatingView?.windowToken != null
+    fun isVisible(): Boolean = isVisibleFlag
 
     /**
      * Get current layout params for touch handling

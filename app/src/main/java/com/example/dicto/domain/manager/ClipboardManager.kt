@@ -24,25 +24,25 @@ import kotlinx.coroutines.flow.stateIn
 class ClipboardManager(
     private val preferencesManager: PreferencesManager,
     private val scope: CoroutineScope
-) {
+) : IClipboardManager {
     /**
      * StateFlow of clipboard monitoring enabled state
      * Automatically updates when preference changes
      */
-    val isMonitoringEnabled: StateFlow<Boolean> = preferencesManager.clipboardMonitoringEnabled
+    override val isMonitoringEnabled: StateFlow<Boolean> = preferencesManager.clipboardMonitoringEnabled
         .stateIn(scope, SharingStarted.Lazily, true)
 
     /**
      * StateFlow of floating window enabled state
      * Automatically updates when preference changes
      */
-    val isFloatingWindowEnabled: StateFlow<Boolean> = preferencesManager.floatingWindowEnabled
+    override val isFloatingWindowEnabled: StateFlow<Boolean> = preferencesManager.floatingWindowEnabled
         .stateIn(scope, SharingStarted.Lazily, false)
 
     /**
      * Toggle clipboard monitoring on/off and persist preference
      */
-    suspend fun toggleMonitoring() {
+    override suspend fun toggleMonitoring() {
         val currentState = isMonitoringEnabled.value
         val newState = !currentState
         Log.d("ClipboardManager", "Toggling clipboard monitoring to: $newState")
@@ -52,7 +52,7 @@ class ClipboardManager(
     /**
      * Toggle floating window on/off and persist preference
      */
-    suspend fun toggleFloatingWindow() {
+    override suspend fun toggleFloatingWindow() {
         val currentState = isFloatingWindowEnabled.value
         val newState = !currentState
         Log.d("ClipboardManager", "Toggling floating window to: $newState")

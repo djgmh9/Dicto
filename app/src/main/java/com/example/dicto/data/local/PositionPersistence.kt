@@ -34,7 +34,7 @@ class PositionPersistence(
         val savedX = preferencesManager.floatingButtonX
         val savedY = preferencesManager.floatingButtonY
 
-        return if (savedX != null && savedY != null) {
+        return if (savedY != null) {
             Pair(savedX, savedY)
         } else {
             null
