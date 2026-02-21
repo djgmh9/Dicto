@@ -85,22 +85,22 @@ fun TranslatorUI(
                 ),
                 leadingIcon = if (searchQuery.isNotEmpty()) {
                     {
-                        IconButton(onClick = { viewModel.pronounceInputSentence() }) {
+                        IconButton(onClick = { viewModel.onQueryChanged("") }) {
                             Icon(
-                                imageVector = Icons.Filled.VolumeUp,
-                                contentDescription = "Pronounce input",
-                                tint = MaterialTheme.colorScheme.primary
+                                imageVector = Icons.Filled.Clear,
+                                contentDescription = "Clear",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                 } else null,
                 trailingIcon = if (searchQuery.isNotEmpty()) {
                     {
-                        IconButton(onClick = { viewModel.onQueryChanged("") }) {
+                        IconButton(onClick = { viewModel.pronounceInputSentence() }) {
                             Icon(
-                                imageVector = Icons.Filled.Clear,
-                                contentDescription = "Clear",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                imageVector = Icons.Filled.VolumeUp,
+                                contentDescription = "Pronounce input",
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
