@@ -52,13 +52,8 @@ import kotlinx.coroutines.flow.stateIn
  * - ClipboardManager: All clipboard preferences
  */
 @Deprecated(
-    message = "Use feature-specific ViewModels: TranslatorViewModel, SavedWordsViewModel, SettingsViewModel",
-    replaceWith = ReplaceWith(
-        "TranslatorViewModel, SavedWordsViewModel, SettingsViewModel",
-        "com.example.dicto.presentation.screens.translator.TranslatorViewModel",
-        "com.example.dicto.presentation.screens.saved.SavedWordsViewModel",
-        "com.example.dicto.presentation.screens.settings.SettingsViewModel"
-    ),
+    message = "Use feature-specific ViewModels: TranslatorViewModel / SavedWordsViewModel / SettingsViewModel",
+    replaceWith = ReplaceWith("TranslatorViewModel()"),
     level = DeprecationLevel.ERROR
 )
 class DictionaryViewModel(application: Application) : AndroidViewModel(application) {
@@ -218,7 +213,9 @@ class DictionaryViewModel(application: Application) : AndroidViewModel(applicati
 
     override fun onCleared() {
         super.onCleared()
-        translationManager.close()
+        // NOTE: Do NOT close translationManager or repository here!
+        // The TranslationRepository is a singleton that persists across ViewModels.
+        // Closing the ML Kit translator here causes it to be unusable on next ViewModel creation.
         pronunciationManager.shutdown()
         Log.d("DictionaryViewModel", "ViewModel cleared and resources cleaned up")
     }

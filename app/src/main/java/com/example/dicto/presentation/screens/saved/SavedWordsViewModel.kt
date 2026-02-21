@@ -126,7 +126,8 @@ class SavedWordsViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        translationManager.close()
+        // NOTE: Do NOT close translationManager or repository here!
+        // The TranslationRepository is a singleton that persists across ViewModels.
         pronunciationManager.shutdown()
     }
 }

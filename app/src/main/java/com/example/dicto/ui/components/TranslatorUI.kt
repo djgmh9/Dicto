@@ -1,5 +1,6 @@
 package com.example.dicto.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.VolumeUp
@@ -18,6 +19,8 @@ import com.example.dicto.presentation.screens.translator.TranslatorViewModel
 import com.example.dicto.domain.model.DictionaryUiState
 import com.example.dicto.ui.screens.ResultsContent
 import com.example.dicto.ui.theme.SearchBarShape
+
+private const val TAG = "TranslatorUI"
 
 /**
  * TranslatorUI - Reusable translator interface component
@@ -44,6 +47,8 @@ fun TranslatorUI(
     val selectedPhrase by viewModel.selectedPhrase.collectAsState()
     val phraseTranslation by viewModel.phraseTranslation.collectAsState()
 
+    Log.d(TAG, "[RECOMPOSE] searchQuery='$searchQuery' uiState=$uiState")
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -61,7 +66,10 @@ fun TranslatorUI(
         ) {
             TextField(
                 value = searchQuery,
-                onValueChange = { viewModel.onQueryChanged(it) },
+                onValueChange = {
+                    Log.d(TAG, "[UI_INPUT] TextField onChange: '$it'")
+                    viewModel.onQueryChanged(it)
+                },
                 placeholder = {
                     Text(
                         "أدخل جملة (Enter sentence)",

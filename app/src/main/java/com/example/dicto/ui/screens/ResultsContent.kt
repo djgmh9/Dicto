@@ -1,5 +1,6 @@
 package com.example.dicto.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,6 +12,8 @@ import androidx.compose.ui.unit.dp
 import com.example.dicto.presentation.screens.translator.TranslatorViewModel
 import com.example.dicto.domain.model.DictionaryUiState
 import com.example.dicto.ui.components.*
+
+private const val TAG = "ResultsContent"
 
 /**
  * ResultsContent - Displays translation results in a scrollable list
@@ -31,18 +34,22 @@ fun ResultsContent(
     // Observe saved words to check if phrase is saved
     val savedWords by viewModel.savedWordsSet.collectAsState()
 
+    Log.d(TAG, "[RENDER] Displaying results: fullTranslation='${state.fullTranslation}' wordCount=${state.wordTranslations.size}")
+
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // 1. Full Sentence Translation
         item {
+            Log.d(TAG, "[ITEM] Rendering TranslationResultHeader with: '${state.fullTranslation}'")
             TranslationResultHeader(translation = state.fullTranslation)
         }
 
         // 2. Phrase Builder
         item {
             val originalWords = state.wordTranslations.map { it.original }
+            Log.d(TAG, "[ITEM] Rendering PhraseBuilderSection with ${originalWords.size} words")
             PhraseBuilderSection(
                 words = originalWords,
                 onPhraseChanged = { viewModel.onPhraseSelectionChanged(it) }
