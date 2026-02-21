@@ -1,12 +1,19 @@
 package com.example.dicto.data.local
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -18,13 +25,28 @@ import org.robolectric.RuntimeEnvironment
 @RunWith(RobolectricTestRunner::class)
 class WordStorageTest {
 
+    @get:Rule
+    val tmpFolder: TemporaryFolder = TemporaryFolder.builder().assureDeletion().build()
+
     private lateinit var context: Context
     private lateinit var wordStorage: WordStorage
+    private lateinit var testDataStore: DataStore<Preferences>
+    private val testDispatcher = UnconfinedTestDispatcher()
+    private val testScope = TestScope(testDispatcher)
 
     @Before
     fun setUp() {
         context = RuntimeEnvironment.getApplication()
-        wordStorage = DefaultWordStorage(context)
+
+        // Create a unique DataStore for each test to avoid data pollution
+        testDataStore = PreferenceDataStoreFactory.create(
+            scope = testScope,
+            produceFile = {
+                tmpFolder.newFile("test_word_storage_${System.currentTimeMillis()}.preferences_pb")
+            }
+        )
+
+        wordStorage = DefaultWordStorage(context, testDataStore)
     }
 
     @Test
