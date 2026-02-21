@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dicto.domain.manager.FloatingWindowManager
 import com.example.dicto.presentation.screens.translator.TranslatorViewModel
 import com.example.dicto.ui.theme.DictoTheme
@@ -61,18 +62,20 @@ class FloatingTranslatorActivity : ComponentActivity() {
                     val lifecycleOwner = LocalLifecycleOwner.current
                     var shouldClose by remember { mutableStateOf(false) }
 
-                    // Get clipboard monitoring preference from a shared preferences manager
-                    // For now, we'll check it once at creation
-                    var clipboardMonitoringEnabled by remember { mutableStateOf(true) }
+                    // Get settings ViewModel to access clipboard monitoring preference
+                    val settingsViewModel: com.example.dicto.presentation.screens.settings.SettingsViewModel = viewModel()
+                    val clipboardMonitoringEnabled by settingsViewModel.clipboardMonitoringEnabled.collectAsState()
 
-                    // Enable clipboard monitoring for floating translator
-                    ClipboardMonitoringManager(
-                        context = context,
-                        lifecycleOwner = lifecycleOwner,
-                        viewModel = viewModel,
-                        selectedTab = 0, // Always monitor in floating translator
-                        isEnabled = clipboardMonitoringEnabled
-                    )
+                    // Only enable clipboard monitoring if user explicitly enabled it
+                    if (clipboardMonitoringEnabled) {
+                        ClipboardMonitoringManager(
+                            context = context,
+                            lifecycleOwner = lifecycleOwner,
+                            viewModel = viewModel,
+                            selectedTab = 0, // Always monitor in floating translator
+                            isEnabled = clipboardMonitoringEnabled
+                        )
+                    }
 
                     if (!shouldClose) {
                         FloatingTranslatorOverlay(

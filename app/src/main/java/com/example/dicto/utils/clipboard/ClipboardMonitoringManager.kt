@@ -1,11 +1,8 @@
 package com.example.dicto.utils.clipboard
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -66,20 +63,8 @@ fun ClipboardMonitoringManager(
         }
         lifecycleOwner.lifecycle.addObserver(observer)
 
-        // Initial state: Start monitoring if conditions are met
-        if (selectedTab == 0 &&
-            lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) &&
-            isEnabled) {
-            lifecycleOwner.lifecycleScope.launch {
-                delay(300)
-                clipboardMonitor.startMonitoring { text ->
-                    viewModel.onClipboardTextFound(text)
-                }
-            }
-        } else {
-            clipboardMonitor.stopMonitoring()
-        }
-
+        // Only start monitoring on lifecycle events (ON_RESUME), not on initial composition
+        // This prevents checking clipboard before preferences are loaded
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
             clipboardMonitor.stopMonitoring()

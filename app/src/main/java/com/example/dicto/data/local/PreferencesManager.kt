@@ -48,7 +48,7 @@ class DefaultPreferencesManager(
         private val FLOATING_BUTTON_Y_KEY = intPreferencesKey("floating_button_y")
 
         // Default values
-        private const val DEFAULT_CLIPBOARD_MONITORING = true
+        private const val DEFAULT_CLIPBOARD_MONITORING = false // Start disabled for privacy
         private const val DEFAULT_FLOATING_WINDOW = false
         private const val DEFAULT_BUTTON_X = 0
         private const val DEFAULT_BUTTON_Y = 100

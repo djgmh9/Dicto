@@ -42,7 +42,7 @@ class SettingsViewModelTest {
     @Test
     fun testInitialClipboardMonitoringState() = runTest {
         val state = viewModel.clipboardMonitoringEnabled.first()
-        assertTrue(state) // FakeClipboardManager initializes to true
+        assertFalse(state) // Default is now false for privacy
     }
 
     @Test
@@ -57,16 +57,12 @@ class SettingsViewModelTest {
         advanceUntilIdle()
 
         val state = fakeClipboardManager.getMonitoringEnabled()
-        assertFalse(state) // Toggles from true to false
+        assertTrue(state) // Toggles from false to true
     }
 
     @Test
     fun testToggleClipboardMonitoringMultipleTimes() = runTest {
-        // Initial state is true
-        viewModel.toggleClipboardMonitoring()
-        advanceUntilIdle()
-        assertFalse(fakeClipboardManager.getMonitoringEnabled()) // true -> false
-
+        // Initial state is false
         viewModel.toggleClipboardMonitoring()
         advanceUntilIdle()
         assertTrue(fakeClipboardManager.getMonitoringEnabled()) // false -> true
@@ -74,6 +70,10 @@ class SettingsViewModelTest {
         viewModel.toggleClipboardMonitoring()
         advanceUntilIdle()
         assertFalse(fakeClipboardManager.getMonitoringEnabled()) // true -> false
+
+        viewModel.toggleClipboardMonitoring()
+        advanceUntilIdle()
+        assertTrue(fakeClipboardManager.getMonitoringEnabled()) // false -> true
     }
 
     @Test
@@ -99,9 +99,7 @@ class SettingsViewModelTest {
 
     @Test
     fun testClipboardMonitoringStateReflected() = runTest {
-        // Initial state is true, so toggle makes it false, then toggle again to true
-        viewModel.toggleClipboardMonitoring()
-        advanceUntilIdle()
+        // Initial state is false, so toggle makes it true
         viewModel.toggleClipboardMonitoring()
         advanceUntilIdle()
 
@@ -126,7 +124,7 @@ class SettingsViewModelTest {
         val clipboardState = fakeClipboardManager.getMonitoringEnabled()
         val floatingState = fakeClipboardManager.getFloatingWindowEnabled()
 
-        assertFalse(clipboardState) // Toggled from true to false
+        assertTrue(clipboardState) // Toggled from false to true
         assertFalse(floatingState) // Remains false (not toggled)
     }
 }

@@ -175,9 +175,12 @@ private fun MainContent(onFloatingWindowPreferenceChanged: (Boolean) -> Unit = {
         }
     }
 
+    // Get clipboard monitoring preference
+    val clipboardMonitoringEnabled by settingsViewModel.clipboardMonitoringEnabled.collectAsState()
+
     // Manage clipboard monitoring lifecycle for translator screen only
-    if (selectedTab == 0) {
-        val clipboardMonitoringEnabled by settingsViewModel.clipboardMonitoringEnabled.collectAsState()
+    // Only create the manager when user is on translator tab
+    if (selectedTab == 0 && clipboardMonitoringEnabled) {
         ClipboardMonitoringManager(
             context = context,
             lifecycleOwner = lifecycleOwner,

@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
  * This is a standalone fake that mimics the interface
  */
 class FakeClipboardManager : IClipboardManager {
-    private val _isMonitoringEnabled = MutableStateFlow(true)
+    private val _isMonitoringEnabled = MutableStateFlow(false) // Default to false like production
     override val isMonitoringEnabled: StateFlow<Boolean> = _isMonitoringEnabled
 
     private val _isFloatingWindowEnabled = MutableStateFlow(false)
