@@ -55,7 +55,7 @@ fun SettingsContent(
                 .weight(1f),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Floating Window Toggle Section
+            // Clipboard monitoring toggle
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),

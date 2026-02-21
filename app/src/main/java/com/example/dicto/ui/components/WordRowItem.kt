@@ -9,11 +9,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import com.example.dicto.domain.model.WordResult
 import com.example.dicto.ui.theme.CardShape
-import com.example.dicto.ui.theme.DarkBlueText
 
 /**
  * WordRowItem - Displays a single word translation in a card format
@@ -48,11 +48,11 @@ fun WordRowItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // LEFT: Star Icon + English Translation (no pronunciation)
+            // LEFT: Star + English translation
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
@@ -66,16 +66,14 @@ fun WordRowItem(
 
                 Text(
                     text = wordResult.translation,
-                    color = DarkBlueText,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        textDirection = TextDirection.Ltr
-                    )
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodyLarge,
                 )
             }
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // RIGHT: Pronunciation + Arabic Text
+            // RIGHT: Arabic word + pronunciation
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End,
@@ -84,9 +82,10 @@ fun WordRowItem(
                 Text(
                     text = wordResult.original,
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         textDirection = TextDirection.Rtl
                     ),
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -124,7 +123,8 @@ private fun SaveWordIconButton(
         Icon(
             imageVector = if (isSaved) Icons.Filled.Star else Icons.Outlined.StarBorder,
             contentDescription = if (isSaved) "Remove from saved" else "Save word",
-            tint = if (isSaved) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+            tint = if (isSaved) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -152,9 +152,8 @@ private fun PronunciationIconButton(
         Icon(
             imageVector = Icons.Filled.VolumeUp,
             contentDescription = contentDescription,
-            tint = MaterialTheme.colorScheme.secondary,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(20.dp)
         )
     }
 }
-

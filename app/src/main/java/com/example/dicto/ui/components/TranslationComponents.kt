@@ -5,7 +5,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.dicto.ui.theme.DarkBlueText
 
 /**
  * TranslationResultHeader - Displays full sentence translation
@@ -22,20 +21,21 @@ fun TranslationResultHeader(
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            "Full Translation:",
-            style = MaterialTheme.typography.labelLarge
+            "Full Translation",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         Text(
             translation,
             style = MaterialTheme.typography.headlineSmall,
-            color = DarkBlueText
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-        HorizontalDivider()
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }
 }
 
@@ -48,16 +48,16 @@ fun TranslationResultHeader(
 @Composable
 fun WordByWordHeader(modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth()) {
-        HorizontalDivider()
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            "Word by Word:",
-            style = MaterialTheme.typography.labelLarge
+            "Word by Word",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(8.dp))
     }
 }
-

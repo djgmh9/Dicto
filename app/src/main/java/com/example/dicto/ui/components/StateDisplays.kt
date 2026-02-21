@@ -6,12 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.dicto.ui.theme.CardShape
 
 /**
  * LoadingStateIndicator - Shows loading progress
- *
- * Single Responsibility: Display loading UI
- * Used in: TranslatorContent
  */
 @Composable
 fun LoadingStateIndicator(modifier: Modifier = Modifier) {
@@ -21,17 +19,14 @@ fun LoadingStateIndicator(modifier: Modifier = Modifier) {
             .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator()
+        CircularProgressIndicator(
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 
 /**
  * ErrorStateDisplay - Shows error messages
- *
- * Single Responsibility: Display error information
- * Used in: TranslatorContent
- *
- * @param message Error message to display
  */
 @Composable
 fun ErrorStateDisplay(
@@ -44,11 +39,13 @@ fun ErrorStateDisplay(
             .padding(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.errorContainer
-        )
+        ),
+        shape = CardShape,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Text(
             text = message,
-            color = MaterialTheme.colorScheme.error,
+            color = MaterialTheme.colorScheme.onErrorContainer,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(16.dp)
         )
@@ -57,11 +54,6 @@ fun ErrorStateDisplay(
 
 /**
  * EmptyStateDisplay - Shows empty state message
- *
- * Single Responsibility: Display empty state UI
- * Used in: TranslatorContent, SavedWordsContent
- *
- * @param message Message to display
  */
 @Composable
 fun EmptyStateDisplay(
@@ -79,4 +71,3 @@ fun EmptyStateDisplay(
         )
     }
 }
-

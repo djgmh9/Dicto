@@ -10,6 +10,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
@@ -49,38 +50,45 @@ fun TranslatorUI(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Google-style rounded search field
+        // Search bar — surfaceVariant background so it "recedes" from background
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = SearchBarShape,
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             TextField(
                 value = searchQuery,
                 onValueChange = { viewModel.onQueryChanged(it) },
-                placeholder = { Text("أدخل جملة (Enter sentence)") },
+                placeholder = {
+                    Text(
+                        "أدخل جملة (Enter sentence)",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
                 textStyle = TextStyle(
                     textDirection = TextDirection.Rtl,
-                    fontSize = MaterialTheme.typography.bodyLarge.fontSize
+                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                    color = MaterialTheme.colorScheme.onSurface
                 ),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    disabledContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                    unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                    disabledIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    cursorColor = MaterialTheme.colorScheme.primary
                 ),
                 leadingIcon = if (searchQuery.isNotEmpty()) {
                     {
                         IconButton(onClick = { viewModel.pronounceInputSentence() }) {
                             Icon(
                                 imageVector = Icons.Filled.VolumeUp,
-                                contentDescription = "Pronounce input sentence",
+                                contentDescription = "Pronounce input",
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -91,7 +99,7 @@ fun TranslatorUI(
                         IconButton(onClick = { viewModel.onQueryChanged("") }) {
                             Icon(
                                 imageVector = Icons.Filled.Clear,
-                                contentDescription = "Clear text",
+                                contentDescription = "Clear",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -144,6 +152,3 @@ fun TranslatorUI(
         }
     }
 }
-
-
-

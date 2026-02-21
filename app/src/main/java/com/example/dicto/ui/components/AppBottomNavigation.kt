@@ -39,28 +39,29 @@ fun AppBottomNavigation(
     ) {
         NavigationBar(
             modifier = Modifier.padding(horizontal = 16.dp),
-            containerColor = androidx.compose.ui.graphics.Color.Transparent,
+            containerColor = MaterialTheme.colorScheme.surface,
             tonalElevation = 0.dp
         ) {
-            NavigationBarItem(
-                icon = { Icon(Icons.Filled.Home, contentDescription = "Translator") },
-                label = { Text("Translator") },
-                selected = selectedTab == 0,
-                onClick = { onTabSelected(0) }
+            val items = listOf(
+                Triple(0, Icons.Filled.Home, "Translator"),
+                Triple(1, Icons.Filled.Favorite, "Saved"),
+                Triple(2, Icons.Filled.Settings, "Settings"),
             )
-            NavigationBarItem(
-                icon = { Icon(Icons.Filled.Favorite, contentDescription = "Saved Words") },
-                label = { Text("Saved") },
-                selected = selectedTab == 1,
-                onClick = { onTabSelected(1) }
-            )
-            NavigationBarItem(
-                icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
-                label = { Text("Settings") },
-                selected = selectedTab == 2,
-                onClick = { onTabSelected(2) }
-            )
+            items.forEach { (index, icon, label) ->
+                NavigationBarItem(
+                    icon = { Icon(icon, contentDescription = label) },
+                    label = { Text(label) },
+                    selected = selectedTab == index,
+                    onClick = { onTabSelected(index) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                )
+            }
         }
     }
 }
-

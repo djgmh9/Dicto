@@ -7,45 +7,119 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
-
+// ============================================================================
+// Light Color Scheme
+// ============================================================================
 private val LightColorScheme = lightColorScheme(
-    primary = PrimaryBlue,
-    secondary = PurpleGrey40,
-    tertiary = Pink40,
-    background = LightGrayBackground,
-    surface = WhiteCard,
-    surfaceVariant = WhiteCard,
-    surfaceContainerHigh = WhiteCard,
-    primaryContainer = PrimaryBlueLight,
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    outlineVariant = Color.Transparent
+    // Primary — blue actions, icons, selected indicators
+    primary            = Brand500,
+    onPrimary          = Color.White,
+    primaryContainer   = Brand100,
+    onPrimaryContainer = Brand600,
+
+    // Secondary — reuse primary family for a monochromatic feel
+    secondary            = Brand500,
+    onSecondary          = Color.White,
+    secondaryContainer   = Brand100,
+    onSecondaryContainer = Brand600,
+
+    // Tertiary — same, keeps palette clean
+    tertiary            = Brand500,
+    onTertiary          = Color.White,
+    tertiaryContainer   = Brand100,
+    onTertiaryContainer = Brand600,
+
+    // Backgrounds & surfaces
+    background         = LightBackground,
+    onBackground       = LightOnBackground,
+    surface            = LightSurface,
+    onSurface          = LightOnSurface,
+    surfaceVariant     = LightSurface2,      // Input fields, chips
+    onSurfaceVariant   = LightOnSurface2,
+    surfaceContainerHighest = LightSurface2,
+    surfaceContainerHigh    = LightSurface2,
+    surfaceContainer        = LightSurface,
+    surfaceContainerLow     = LightBackground,
+
+    // Outlines
+    outline        = LightOutline,
+    outlineVariant = LightOutline,
+
+    // Error
+    error            = ErrorRed,
+    onError          = Color.White,
+    errorContainer   = ErrorRedContainer,
+    onErrorContainer = ErrorRed,
+
+    // Inverse (snackbars, tooltips)
+    inverseSurface   = LightOnBackground,
+    inverseOnSurface = LightSurface,
+    inversePrimary   = Brand400,
 )
 
+// ============================================================================
+// Dark Color Scheme (AMOLED — True Black base)
+// ============================================================================
+private val DarkColorScheme = darkColorScheme(
+    // Primary
+    primary            = Brand400,
+    onPrimary          = Color.White,
+    primaryContainer   = Brand900,
+    onPrimaryContainer = Brand100,
+
+    // Secondary
+    secondary            = Brand400,
+    onSecondary          = Color.White,
+    secondaryContainer   = Brand900,
+    onSecondaryContainer = Brand100,
+
+    // Tertiary
+    tertiary            = Brand400,
+    onTertiary          = Color.White,
+    tertiaryContainer   = Brand900,
+    onTertiaryContainer = Brand100,
+
+    // Backgrounds & surfaces
+    background         = DarkBackground,
+    onBackground       = DarkOnBackground,
+    surface            = DarkSurface,
+    onSurface          = DarkOnSurface,
+    surfaceVariant     = DarkSurface2,
+    onSurfaceVariant   = DarkOnSurface2,
+    surfaceContainerHighest = DarkSurface2,
+    surfaceContainerHigh    = DarkSurface2,
+    surfaceContainer        = DarkSurface,
+    surfaceContainerLow     = DarkBackground,
+
+    // Outlines
+    outline        = DarkOutline,
+    outlineVariant = DarkOutline,
+
+    // Error
+    error            = ErrorRedDark,
+    onError          = Color.Black,
+    errorContainer   = ErrorRedContainerDark,
+    onErrorContainer = ErrorRedDark,
+
+    // Inverse
+    inverseSurface   = DarkOnSurface,
+    inverseOnSurface = DarkSurface,
+    inversePrimary   = Brand600,
+)
+
+// ============================================================================
+// Theme Composable
+// ============================================================================
 @Composable
 fun DictoTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Disable dynamic color to use custom flat design
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
-
     MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        shapes = Shapes,
-        content = content
+        colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
+        typography  = Typography,
+        shapes      = Shapes,
+        content     = content
     )
 }
-

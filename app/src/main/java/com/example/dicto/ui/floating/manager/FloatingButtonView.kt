@@ -196,9 +196,16 @@ class FloatingButtonView(
         onTouchListener: (MotionEvent) -> Boolean
     ): ImageView {
         return ImageView(context).apply {
-            setBackgroundColor(Color.parseColor("#6200EE"))
-            setImageResource(android.R.drawable.ic_menu_search)
-            scaleType = ImageView.ScaleType.CENTER
+            // Set circular background with 15% transparency (85% alpha = 217 in decimal, ~0.85 * 255)
+            setBackgroundResource(com.example.dicto.R.drawable.floating_button_background)
+
+            // Use app icon (ic_launcher_round.webp)
+            setImageResource(com.example.dicto.R.mipmap.ic_launcher_round)
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+
+            // Apply 40% transparency to the image (alpha = 153 = 60% opaque)
+            imageAlpha = 153
+
             setOnTouchListener { _, event ->
                 onTouchListener(event)
             }

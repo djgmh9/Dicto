@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Light Theme - iOS 26 inspired modern design -->
-    <style name="Theme.Dicto" parent="Theme.AppCompat.Light.NoActionBar">
+    <!-- Dark Theme - AMOLED Friendly (True Black background) -->
+    <style name="Theme.Dicto" parent="Theme.AppCompat.NoActionBar">
         <!-- Primary Colors -->
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
@@ -15,3 +15,5 @@
         <item name="android:textColorSecondary">@color/text_secondary_light</item>
     </style>
 </resources>
+
+
