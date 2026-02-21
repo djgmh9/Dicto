@@ -1,6 +1,7 @@
 package com.example.dicto.data.local
 
 import com.example.dicto.fakes.FakeWordStorage
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
@@ -114,12 +115,16 @@ class FakeWordStorageTest {
 
     @Test
     fun testFlowEmitsUpdates() = runBlocking {
-        var collectedSize = 0
-        storage.savedWordsFlow.collect { words ->
-            collectedSize = words.size
-        }
+        // Collect initial state
+        val initialWords = storage.savedWordsFlow.first()
+        assertTrue(initialWords.isEmpty())
 
+        // Save a word
         storage.save("hello")
-        assertEquals(1, collectedSize)
+
+        // Collect updated state
+        val updatedWords = storage.savedWordsFlow.first()
+        assertEquals(1, updatedWords.size)
+        assertTrue(updatedWords.contains("hello"))
     }
 }
