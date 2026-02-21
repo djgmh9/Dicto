@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dicto.presentation.screens.settings.SettingsViewModel
+import com.example.dicto.ui.theme.CardShape
 import com.example.dicto.utils.AppLogger
 import com.example.dicto.utils.PermissionHelper
 import com.example.dicto.utils.logging.FloatingWindowLogger
@@ -54,14 +55,15 @@ fun SettingsContent(
                 .weight(1f),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Clipboard Monitoring Section
+            // Floating Window Toggle Section
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    shape = CardShape
                 ) {
                     Column(
                         modifier = Modifier
@@ -93,14 +95,15 @@ fun SettingsContent(
                 }
             }
 
-            // Floating Window Toggle Section
+            // Auto-Translate Clipboard Toggle Section
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    shape = CardShape
                 ) {
                     Column(
                         modifier = Modifier

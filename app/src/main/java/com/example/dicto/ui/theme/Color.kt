@@ -11,8 +11,9 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
 // Custom flat design colors
-val LightGrayBackground = Color(0xFFF5F5F5)  // Light gray background
-val WhiteCard = Color(0xFFFFFFFF)            // Pure white for cards
-val PrimaryBlue = Color(0xFF1976D2)          // Material Blue for primary elements
-val PrimaryBlueLight = Color(0xFFBBDEFB)     // Light blue for selected states
+val WhiteCard = Color(0xFFFFFFFF)
+val LightGrayBackground = Color(0xFFF5F5F5)
+val PrimaryBlue = Color(0xFF0D47A1) // Darker deep blue
+val PrimaryBlueLight = Color(0xFFE3F2FD)
+val DarkBlueText = Color(0xFF1565C0) // Dark blue for translation text
 

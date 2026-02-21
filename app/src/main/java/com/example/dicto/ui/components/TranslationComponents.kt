@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
+import com.example.dicto.ui.theme.DarkBlueText
 
 /**
  * TranslationResultHeader - Displays full sentence translation
@@ -31,7 +31,7 @@ fun TranslationResultHeader(
         Text(
             translation,
             style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.primary
+            color = DarkBlueText
         )
 
         Spacer(modifier = Modifier.height(16.dp))

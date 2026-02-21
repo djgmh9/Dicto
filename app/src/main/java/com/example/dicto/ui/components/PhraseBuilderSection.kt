@@ -5,11 +5,12 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.example.dicto.ui.theme.WhiteCard
+import com.example.dicto.ui.theme.CardShape
 
 /**
  * PhraseBuilderSection - Allows users to select multiple words and build a phrase
@@ -95,7 +96,9 @@ private fun WordFilterChip(
         selected = isSelected,
         onClick = onClick,
         label = { Text(word) },
+        shape = CardShape,
         colors = FilterChipDefaults.filterChipColors(
+            containerColor = WhiteCard,
             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
             selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
         )

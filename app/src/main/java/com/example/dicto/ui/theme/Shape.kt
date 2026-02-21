@@ -9,10 +9,12 @@ import androidx.compose.ui.unit.dp
  *
  * - SearchBarShape: Google-style rounded search bar (28dp corners)
  * - BottomNavShape: Pill-shaped bottom navigation bar
+ * - CardShape: More rounded corners for word cards and settings cards (16dp)
  */
 
 val SearchBarShape = RoundedCornerShape(28.dp)
 val BottomNavShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+val CardShape = RoundedCornerShape(16.dp)
 
 val Shapes = Shapes(
     small = RoundedCornerShape(4.dp),

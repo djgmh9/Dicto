@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import com.example.dicto.domain.model.WordResult
+import com.example.dicto.ui.theme.CardShape
+import com.example.dicto.ui.theme.DarkBlueText
 
 /**
  * WordRowItem - Displays a single word translation in a card format
@@ -40,6 +42,7 @@ fun WordRowItem(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
+        shape = CardShape,
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
@@ -63,7 +66,7 @@ fun WordRowItem(
 
                 Text(
                     text = wordResult.translation,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = DarkBlueText,
                     style = MaterialTheme.typography.bodyLarge.copy(
                         textDirection = TextDirection.Ltr
                     )

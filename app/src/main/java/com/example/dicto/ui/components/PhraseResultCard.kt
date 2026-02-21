@@ -11,6 +11,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
+import com.example.dicto.ui.theme.CardShape
+import com.example.dicto.ui.theme.DarkBlueText
 
 /**
  * PhraseResultCard - Displays the result of a phrase builder selection
@@ -46,6 +48,7 @@ fun PhraseResultCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
+        shape = CardShape,
         modifier = modifier.fillMaxWidth()
     ) {
         Column(
@@ -121,7 +124,7 @@ fun PhraseResultCard(
                 Text(
                     text = translation,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = DarkBlueText
                 )
             } else {
                 Text(
