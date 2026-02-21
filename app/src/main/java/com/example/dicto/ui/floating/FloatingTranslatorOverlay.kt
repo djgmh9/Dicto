@@ -51,7 +51,7 @@ fun FloatingTranslatorOverlay(
                 modifier = Modifier
                     .fillMaxWidth(0.95f)
                     .fillMaxHeight(0.9f),
-                elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(

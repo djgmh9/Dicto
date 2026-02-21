@@ -3,6 +3,7 @@ package com.example.dicto.ui.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -15,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.example.dicto.presentation.screens.translator.TranslatorViewModel
 import com.example.dicto.domain.model.DictionaryUiState
 import com.example.dicto.ui.screens.ResultsContent
+import com.example.dicto.ui.theme.SearchBarShape
 
 /**
  * TranslatorUI - Reusable translator interface component
@@ -47,49 +49,61 @@ fun TranslatorUI(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Input TextField with Pronunciation Button
-        Row(
+        // Google-style rounded search field with border for flat design
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            shape = SearchBarShape,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            border = androidx.compose.foundation.BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
         ) {
-            OutlinedTextField(
+            TextField(
                 value = searchQuery,
                 onValueChange = { viewModel.onQueryChanged(it) },
-                label = { Text("أدخل جملة (Enter sentence)") },
-                modifier = Modifier.weight(1f),
+                placeholder = { Text("أدخل جملة (Enter sentence)") },
+                modifier = Modifier.fillMaxWidth(),
                 textStyle = TextStyle(
                     textDirection = TextDirection.Rtl,
                     fontSize = MaterialTheme.typography.bodyLarge.fontSize
-                )
+                ),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                    unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                    disabledIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                ),
+                leadingIcon = if (searchQuery.isNotEmpty()) {
+                    {
+                        IconButton(onClick = { viewModel.pronounceInputSentence() }) {
+                            Icon(
+                                imageVector = Icons.Filled.VolumeUp,
+                                contentDescription = "Pronounce input sentence",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                } else null,
+                trailingIcon = if (searchQuery.isNotEmpty()) {
+                    {
+                        IconButton(onClick = { viewModel.onQueryChanged("") }) {
+                            Icon(
+                                imageVector = Icons.Filled.Clear,
+                                contentDescription = "Clear text",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                } else null,
+                singleLine = false,
+                maxLines = 3
             )
-
-            // Pronunciation button for input sentence
-            if (searchQuery.isNotEmpty()) {
-                IconButton(
-                    onClick = { viewModel.pronounceInputSentence() },
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.VolumeUp,
-                        contentDescription = "Pronounce input sentence",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Clear button
-        if (searchQuery.isNotEmpty()) {
-            Button(
-                onClick = { viewModel.onQueryChanged("") },
-                modifier = Modifier.align(Alignment.End)
-            ) {
-                Text("Clear")
-            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
