@@ -2,9 +2,9 @@ package com.example.dicto.ui.components
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.BookmarkAdd
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -43,9 +43,9 @@ fun AppBottomNavigation(
             tonalElevation = 0.dp
         ) {
             val items = listOf(
-                Triple(0, Icons.Filled.Home, "Translator"),
-                Triple(1, Icons.Filled.Favorite, "Saved"),
-                Triple(2, Icons.Filled.Settings, "Settings"),
+                Triple(0, Icons.Rounded.Home, "Translator"),
+                Triple(1, Icons.Rounded.BookmarkAdd, "Saved"),
+                Triple(2, Icons.Rounded.Settings, "Settings"),
             )
             items.forEach { (index, icon, label) ->
                 NavigationBarItem(

@@ -2,9 +2,9 @@ package com.example.dicto.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.VolumeUp
-import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material.icons.rounded.Bookmark
+import androidx.compose.material.icons.rounded.BookmarkBorder
+import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -60,7 +60,7 @@ fun PhraseResultCard(
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
-                        imageVector = if (isSaved) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                        imageVector = if (isSaved) Icons.Rounded.Bookmark else Icons.Rounded.BookmarkBorder,
                         contentDescription = if (isSaved) "Remove phrase" else "Save phrase",
                         tint = if (isSaved) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onPrimaryContainer,
@@ -96,7 +96,7 @@ fun PhraseResultCard(
                     modifier = Modifier.size(36.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.VolumeUp,
+                        imageVector = Icons.Rounded.VolumeUp,
                         contentDescription = "Pronounce phrase",
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.size(20.dp)

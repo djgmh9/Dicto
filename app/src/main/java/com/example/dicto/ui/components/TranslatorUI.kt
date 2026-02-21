@@ -2,8 +2,8 @@ package com.example.dicto.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.VolumeUp
-import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.rounded.VolumeUp
+import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -87,7 +87,7 @@ fun TranslatorUI(
                     {
                         IconButton(onClick = { viewModel.onQueryChanged("") }) {
                             Icon(
-                                imageVector = Icons.Filled.Clear,
+                                imageVector = Icons.Rounded.Clear,
                                 contentDescription = "Clear",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -98,7 +98,7 @@ fun TranslatorUI(
                     {
                         IconButton(onClick = { viewModel.pronounceInputSentence() }) {
                             Icon(
-                                imageVector = Icons.Filled.VolumeUp,
+                                imageVector = Icons.Rounded.VolumeUp,
                                 contentDescription = "Pronounce input",
                                 tint = MaterialTheme.colorScheme.primary
                             )

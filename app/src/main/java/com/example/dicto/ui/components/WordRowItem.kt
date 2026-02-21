@@ -2,9 +2,9 @@ package com.example.dicto.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.VolumeUp
-import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material.icons.rounded.Bookmark
+import androidx.compose.material.icons.rounded.BookmarkBorder
+import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -121,7 +121,7 @@ private fun SaveWordIconButton(
         modifier = modifier
     ) {
         Icon(
-            imageVector = if (isSaved) Icons.Filled.Star else Icons.Outlined.StarBorder,
+            imageVector = if (isSaved) Icons.Rounded.Bookmark else Icons.Rounded.BookmarkBorder,
             contentDescription = if (isSaved) "Remove from saved" else "Save word",
             tint = if (isSaved) MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.onSurfaceVariant
@@ -150,7 +150,7 @@ private fun PronunciationIconButton(
         modifier = modifier.size(36.dp)
     ) {
         Icon(
-            imageVector = Icons.Filled.VolumeUp,
+            imageVector = Icons.Rounded.VolumeUp,
             contentDescription = contentDescription,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(20.dp)
