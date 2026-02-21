@@ -35,18 +35,23 @@ fun ClipboardMonitoringManager(
     selectedTab: Int,
     isEnabled: Boolean
 ) {
-    // Lazy initialize ClipboardMonitor with ONE_TIME mode - only checks once on app start
+    // Only create and manage clipboard monitoring if it's actually enabled
+    if (!isEnabled) {
+        return  // Don't create anything if disabled
+    }
+
+    // Lazy initialize ClipboardMonitor with ONE_TIME mode - only checks once when monitoring is enabled
     val clipboardMonitor = androidx.compose.runtime.remember {
         ClipboardMonitor(context, lifecycleOwner.lifecycleScope, ClipboardMonitor.MonitoringMode.ONE_TIME)
     }
 
     // Observe clipboard when conditions are met
-    DisposableEffect(lifecycleOwner, selectedTab, isEnabled) {
+    DisposableEffect(lifecycleOwner, selectedTab) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
-                    // Only monitor when on translator tab (0) and monitoring is enabled
-                    if (selectedTab == 0 && isEnabled) {
+                    // Only monitor when on translator tab (0)
+                    if (selectedTab == 0) {
                         lifecycleOwner.lifecycleScope.launch {
                             delay(300)
                             clipboardMonitor.startMonitoring { text ->
@@ -63,8 +68,6 @@ fun ClipboardMonitoringManager(
         }
         lifecycleOwner.lifecycle.addObserver(observer)
 
-        // Only start monitoring on lifecycle events (ON_RESUME), not on initial composition
-        // This prevents checking clipboard before preferences are loaded
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
             clipboardMonitor.stopMonitoring()
