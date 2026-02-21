@@ -29,14 +29,18 @@ class PreferencesManagerTest {
 
     @Test
     fun `default values - matches expectations`() = runTest {
-        assertTrue("Clipboard monitoring should be enabled by default", 
-            preferencesManager.clipboardMonitoringEnabled.first())
-        assertFalse("Floating window should be disabled by default", 
-            preferencesManager.floatingWindowEnabled.first())
-        assertEquals("Default X position should be 0", 0, 
-            preferencesManager.floatingButtonX.first())
-        assertEquals("Default Y position should be 100", 100, 
-            preferencesManager.floatingButtonY.first())
+        // Critical: clipboard monitoring must be FALSE by default to prevent auto-start bug
+        val clipboardEnabled = preferencesManager.clipboardMonitoringEnabled.first()
+        assertFalse("Clipboard monitoring should be DISABLED (false) by default to fix auto-start bug", clipboardEnabled)
+
+        val floatingEnabled = preferencesManager.floatingWindowEnabled.first()
+        assertFalse("Floating window should be disabled by default", floatingEnabled)
+
+        val xPosition = preferencesManager.floatingButtonX.first()
+        assertEquals("Default X position should be 0", 0, xPosition)
+
+        val yPosition = preferencesManager.floatingButtonY.first()
+        assertEquals("Default Y position should be 100", 100, yPosition)
     }
 
     @Test

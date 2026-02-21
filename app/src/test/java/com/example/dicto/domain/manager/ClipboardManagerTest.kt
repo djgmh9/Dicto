@@ -1,9 +1,7 @@
 package com.example.dicto.domain.manager
 
 import com.example.dicto.fakes.FakePreferencesManager
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -27,14 +25,10 @@ import kotlin.test.assertTrue
 class ClipboardManagerTest {
 
     private lateinit var fakePreferencesManager: FakePreferencesManager
-    private lateinit var clipboardManager: ClipboardManager
-    private lateinit var testScope: CoroutineScope
 
     @Before
     fun setup() {
         fakePreferencesManager = FakePreferencesManager()
-        testScope = CoroutineScope(StandardTestDispatcher())
-        clipboardManager = ClipboardManager(fakePreferencesManager, testScope)
     }
 
     // ==================== CRITICAL: Initial State Tests ====================
@@ -70,13 +64,14 @@ class ClipboardManagerTest {
 
     @Test
     fun `toggleMonitoring - disabled to enabled`() = runTest {
-        assertFalse(fakePreferencesManager.getClipboardMonitoringEnabledValue())
+        val clipboardManager = ClipboardManager(fakePreferencesManager, backgroundScope)
+        assertFalse(clipboardManager.isMonitoringEnabled.value)
 
         clipboardManager.toggleMonitoring()
         advanceUntilIdle()
 
-        // Check the preference directly after toggle
-        assertTrue(fakePreferencesManager.getClipboardMonitoringEnabledValue())
+        // StateFlow should be updated
+        assertTrue(clipboardManager.isMonitoringEnabled.value)
     }
 
     @Test
@@ -86,7 +81,7 @@ class ClipboardManagerTest {
         advanceUntilIdle()
 
         // Create manager that reads the true preference
-        val manager = ClipboardManager(fakePreferencesManager, testScope)
+        val manager = ClipboardManager(fakePreferencesManager, backgroundScope)
         advanceUntilIdle()
 
         // Verify StateFlow reads the true value
@@ -102,6 +97,8 @@ class ClipboardManagerTest {
 
     @Test
     fun `toggleMonitoring - multiple toggles`() = runTest {
+        val clipboardManager = ClipboardManager(fakePreferencesManager, testScope)
+
         // Initial state via StateFlow
         assertFalse(clipboardManager.isMonitoringEnabled.value)
 
@@ -125,6 +122,7 @@ class ClipboardManagerTest {
 
     @Test
     fun `setMonitoringEnabled - explicitly set to true`() = runTest {
+        val clipboardManager = ClipboardManager(fakePreferencesManager, testScope)
         clipboardManager.setMonitoringEnabled(true)
         advanceUntilIdle()
         assertTrue(fakePreferencesManager.getClipboardMonitoringEnabledValue())
@@ -145,6 +143,7 @@ class ClipboardManagerTest {
 
     @Test
     fun `setFloatingWindowEnabled - explicitly set to true`() = runTest {
+        val clipboardManager = ClipboardManager(fakePreferencesManager, testScope)
         clipboardManager.setFloatingWindowEnabled(true)
         advanceUntilIdle()
         assertTrue(fakePreferencesManager.getFloatingWindowEnabledValue())
@@ -167,12 +166,13 @@ class ClipboardManagerTest {
 
     @Test
     fun `toggleFloatingWindow - disabled to enabled`() = runTest {
-        assertFalse(fakePreferencesManager.getFloatingWindowEnabledValue())
+        val clipboardManager = ClipboardManager(fakePreferencesManager, testScope)
+        assertFalse(clipboardManager.isFloatingWindowEnabled.value)
 
         clipboardManager.toggleFloatingWindow()
         advanceUntilIdle()
 
-        assertTrue(fakePreferencesManager.getFloatingWindowEnabledValue())
+        assertTrue(clipboardManager.isFloatingWindowEnabled.value)
     }
 
     @Test
@@ -181,69 +181,69 @@ class ClipboardManagerTest {
         fakePreferencesManager.setFloatingWindowEnabled(true)
         advanceUntilIdle()
 
-        // Verify it's true
-        assertTrue(fakePreferencesManager.getFloatingWindowEnabledValue())
-
         // Create manager that reads the true preference
         val manager = ClipboardManager(fakePreferencesManager, testScope)
         advanceUntilIdle()
+
+        // Verify StateFlow reads the true value
+        assertTrue(manager.isFloatingWindowEnabled.value)
 
         // Toggle it to false
         manager.toggleFloatingWindow()
         advanceUntilIdle()
 
-        assertFalse(fakePreferencesManager.getFloatingWindowEnabledValue())
+        // Check StateFlow was updated
+        assertFalse(manager.isFloatingWindowEnabled.value)
     }
 
     @Test
     fun `toggleFloatingWindow - multiple toggles`() = runTest {
-        var current = fakePreferencesManager.getFloatingWindowEnabledValue()
-        assertFalse(current)
+        val clipboardManager = ClipboardManager(fakePreferencesManager, testScope)
+        assertFalse(clipboardManager.isFloatingWindowEnabled.value)
 
         // false -> true
         clipboardManager.toggleFloatingWindow()
         advanceUntilIdle()
-        current = fakePreferencesManager.getFloatingWindowEnabledValue()
-        assertTrue(current, "After first toggle, should be true")
+        assertTrue(clipboardManager.isFloatingWindowEnabled.value, "After first toggle, should be true")
 
         // true -> false
         clipboardManager.toggleFloatingWindow()
         advanceUntilIdle()
-        current = fakePreferencesManager.getFloatingWindowEnabledValue()
-        assertFalse(current, "After second toggle, should be false")
+        assertFalse(clipboardManager.isFloatingWindowEnabled.value, "After second toggle, should be false")
 
         // false -> true
         clipboardManager.toggleFloatingWindow()
         advanceUntilIdle()
-        current = fakePreferencesManager.getFloatingWindowEnabledValue()
-        assertTrue(current, "After third toggle, should be true")
+        assertTrue(clipboardManager.isFloatingWindowEnabled.value, "After third toggle, should be true")
     }
 
     // ==================== Independence Tests ====================
 
     @Test
     fun `clipboard monitoring and floating window are independent`() = runTest {
+        val clipboardManager = ClipboardManager(fakePreferencesManager, testScope)
+
         // Initial state: both false
-        assertFalse(fakePreferencesManager.getClipboardMonitoringEnabledValue())
-        assertFalse(fakePreferencesManager.getFloatingWindowEnabledValue())
+        assertFalse(clipboardManager.isMonitoringEnabled.value)
+        assertFalse(clipboardManager.isFloatingWindowEnabled.value)
 
         // Toggle monitoring: only monitoring should change
         clipboardManager.toggleMonitoring()
         advanceUntilIdle()
-        assertTrue(fakePreferencesManager.getClipboardMonitoringEnabledValue())
-        assertFalse(fakePreferencesManager.getFloatingWindowEnabledValue())
+        assertTrue(clipboardManager.isMonitoringEnabled.value)
+        assertFalse(clipboardManager.isFloatingWindowEnabled.value)
 
         // Toggle floating window: only floating window should change
         clipboardManager.toggleFloatingWindow()
         advanceUntilIdle()
-        assertTrue(fakePreferencesManager.getClipboardMonitoringEnabledValue())
-        assertTrue(fakePreferencesManager.getFloatingWindowEnabledValue())
+        assertTrue(clipboardManager.isMonitoringEnabled.value)
+        assertTrue(clipboardManager.isFloatingWindowEnabled.value)
 
         // Toggle monitoring again: only monitoring should change
         clipboardManager.toggleMonitoring()
         advanceUntilIdle()
-        assertFalse(fakePreferencesManager.getClipboardMonitoringEnabledValue())
-        assertTrue(fakePreferencesManager.getFloatingWindowEnabledValue())
+        assertFalse(clipboardManager.isMonitoringEnabled.value)
+        assertTrue(clipboardManager.isFloatingWindowEnabled.value)
     }
 
     // ==================== Persistence Tests ====================
@@ -251,6 +251,7 @@ class ClipboardManagerTest {
     @Suppress("UNUSED_VARIABLE")
     @Test
     fun `clipboard monitoring state persists across manager instances`() = runTest {
+        val clipboardManager = ClipboardManager(fakePreferencesManager, testScope)
         clipboardManager.setMonitoringEnabled(true)
         advanceUntilIdle()
 
@@ -264,6 +265,7 @@ class ClipboardManagerTest {
     @Suppress("UNUSED_VARIABLE")
     @Test
     fun `floating window state persists across manager instances`() = runTest {
+        val clipboardManager = ClipboardManager(fakePreferencesManager, testScope)
         clipboardManager.setFloatingWindowEnabled(true)
         advanceUntilIdle()
 
@@ -278,6 +280,7 @@ class ClipboardManagerTest {
 
     @Test
     fun `isMonitoringEnabled - value property reflects StateFlow state after toggle`() = runTest {
+        val clipboardManager = ClipboardManager(fakePreferencesManager, testScope)
         assertFalse(clipboardManager.isMonitoringEnabled.value)
 
         clipboardManager.toggleMonitoring()
@@ -287,6 +290,13 @@ class ClipboardManagerTest {
         assertTrue(fakePreferencesManager.getClipboardMonitoringEnabledValue())
     }
 }
+
+
+
+
+
+
+
 
 
 

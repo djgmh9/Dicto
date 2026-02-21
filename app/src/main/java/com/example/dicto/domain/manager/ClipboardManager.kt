@@ -28,16 +28,22 @@ class ClipboardManager(
     /**
      * StateFlow of clipboard monitoring enabled state
      * Automatically updates when preference changes
+     *
+     * Uses Eagerly to ensure the flow stays in sync with preferences
+     * so that toggle() reads the correct current value
      */
     override val isMonitoringEnabled: StateFlow<Boolean> = preferencesManager.clipboardMonitoringEnabled
-        .stateIn(scope, SharingStarted.Lazily, false)  // ✅ Fixed: Default to false (opt-in)
+        .stateIn(scope, SharingStarted.Eagerly, false)  // ✅ Eagerly keeps it in sync
 
     /**
      * StateFlow of floating window enabled state
      * Automatically updates when preference changes
+     *
+     * Uses Eagerly to ensure the flow stays in sync with preferences
+     * so that toggle() reads the correct current value
      */
     override val isFloatingWindowEnabled: StateFlow<Boolean> = preferencesManager.floatingWindowEnabled
-        .stateIn(scope, SharingStarted.Lazily, false)
+        .stateIn(scope, SharingStarted.Eagerly, false)
 
     /**
      * Toggle clipboard monitoring on/off and persist preference
