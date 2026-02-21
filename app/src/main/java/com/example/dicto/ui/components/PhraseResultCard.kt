@@ -46,10 +46,6 @@ fun PhraseResultCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
-        border = androidx.compose.foundation.BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-        ),
         modifier = modifier.fillMaxWidth()
     ) {
         Column(

@@ -49,18 +49,14 @@ fun TranslatorUI(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Google-style rounded search field with border for flat design
+        // Google-style rounded search field
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = SearchBarShape,
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                containerColor = MaterialTheme.colorScheme.surface
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            border = androidx.compose.foundation.BorderStroke(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant
-            )
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             TextField(
                 value = searchQuery,
@@ -72,9 +68,9 @@ fun TranslatorUI(
                     fontSize = MaterialTheme.typography.bodyLarge.fontSize
                 ),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    disabledContainerColor = MaterialTheme.colorScheme.surface,
                     focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                     unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                     disabledIndicatorColor = androidx.compose.ui.graphics.Color.Transparent

@@ -202,6 +202,7 @@ private fun MainContent(onFloatingWindowPreferenceChanged: (Boolean) -> Unit = {
     // Main layout with Scaffold and bottom navigation
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             AppBottomNavigation(
                 selectedTab = selectedTab,

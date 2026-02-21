@@ -9,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import com.example.dicto.ui.theme.BottomNavShape
 
@@ -22,7 +21,7 @@ import com.example.dicto.ui.theme.BottomNavShape
  * - Visual feedback for selected tab
  * - Customizable tab selection callback
  * - Pill-shaped design with rounded top corners
- * - Elevated appearance
+ * - Flat design without shadow
  *
  * Parameters:
  * - selectedTab: Currently selected tab (0=Translator, 1=Saved, 2=Settings)
@@ -34,13 +33,7 @@ fun AppBottomNavigation(
     onTabSelected: (Int) -> Unit
 ) {
     Surface(
-        modifier = Modifier
-            .shadow(
-                elevation = 0.dp,
-                shape = BottomNavShape,
-                clip = false
-            )
-            .clip(BottomNavShape),
+        modifier = Modifier.clip(BottomNavShape),
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp
     ) {
