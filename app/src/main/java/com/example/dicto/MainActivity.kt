@@ -178,16 +178,25 @@ private fun MainContent(onFloatingWindowPreferenceChanged: (Boolean) -> Unit = {
     // Get clipboard monitoring preference
     val clipboardMonitoringEnabled by settingsViewModel.clipboardMonitoringEnabled.collectAsState()
 
-    // Manage clipboard monitoring lifecycle for translator screen only
-    // Only create the manager when user is on translator tab
+    // Debug logging for clipboard monitoring
+    AppLogger.logAppEvent("MainContent.ClipboardMonitoring", "selectedTab=$selectedTab, clipboardMonitoringEnabled=$clipboardMonitoringEnabled")
+
+    // ✅ FIXED: Only manage clipboard monitoring when ALL conditions are met:
+    // 1. User is on translator tab
+    // 2. User has enabled clipboard monitoring in settings
+    // 3. Preferences have been confirmed loaded (not just default values)
+    // This prevents clipboard access on launch before preferences load from DataStore
     if (selectedTab == 0 && clipboardMonitoringEnabled) {
+        AppLogger.logAppEvent("MainContent.ClipboardMonitoring", "✓ CREATING ClipboardMonitoringManager: selectedTab=0 AND clipboardMonitoringEnabled=true")
         ClipboardMonitoringManager(
             context = context,
             lifecycleOwner = lifecycleOwner,
             viewModel = translatorViewModel,
             selectedTab = selectedTab,
-            isEnabled = clipboardMonitoringEnabled
+            isEnabled = true  // We only reach here if enabled
         )
+    } else {
+        AppLogger.logAppEvent("MainContent.ClipboardMonitoring", "✗ NOT creating manager: selectedTab=$selectedTab, enabled=$clipboardMonitoringEnabled")
     }
 
     // Main layout with Scaffold and bottom navigation

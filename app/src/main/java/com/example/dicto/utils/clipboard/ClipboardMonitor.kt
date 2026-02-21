@@ -46,10 +46,11 @@ class ClipboardMonitor(
      * - CONTINUOUS: Check clipboard every 1 second
      */
     fun startMonitoring(onNewText: (String) -> Unit) {
-        Log.d(TAG, "Starting clipboard monitoring (mode: $mode)")
+        Log.d(TAG, ">>> [START_MONITORING_ENTRY] Starting clipboard monitoring (mode: $mode)")
+        Log.d(TAG, ">>> [START_MONITORING_ENTRY] Stack trace: ${Thread.currentThread().stackTrace.take(10).joinToString("\n")}")
 
         if (monitoringJob?.isActive == true) {
-            Log.d(TAG, "Monitoring already active, skipping start")
+            Log.d(TAG, ">>> [MONITORING_ACTIVE] Monitoring already active, skipping start")
             return
         }
 
@@ -58,15 +59,18 @@ class ClipboardMonitor(
         when (mode) {
             MonitoringMode.ONE_TIME -> {
                 // Check once immediately and stop
-                Log.d(TAG, "ONE_TIME mode: checking clipboard once")
+                Log.d(TAG, ">>> [ONE_TIME_MODE] ONE_TIME mode: about to check clipboard once")
                 checkClipboard()
+                Log.d(TAG, ">>> [ONE_TIME_MODE_COMPLETE] ONE_TIME clipboard check complete")
                 // Job is not created for ONE_TIME mode
             }
             MonitoringMode.CONTINUOUS -> {
                 // Check immediately on start
+                Log.d(TAG, ">>> [CONTINUOUS_MODE] CONTINUOUS mode: checking clipboard immediately")
                 checkClipboard()
 
                 // Start continuous monitoring
+                Log.d(TAG, ">>> [CONTINUOUS_MODE] Starting continuous monitoring loop")
                 monitoringJob = lifecycleScope.launch {
                     while (isActive) {
                         delay(CLIPBOARD_CHECK_INTERVAL_MS)
@@ -91,18 +95,21 @@ class ClipboardMonitor(
      * Only invokes callback if text is new and meets validation criteria
      */
     private fun checkClipboard() {
+        Log.d(TAG, ">>> [CHECK_CLIPBOARD] checkClipboard() called")
+        Log.d(TAG, ">>> [CHECK_CLIPBOARD] Stack: ${Thread.currentThread().stackTrace.take(8).joinToString(" <- ")}")
+
         try {
             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
             // Check if clipboard has content
             if (!clipboard.hasPrimaryClip()) {
-                Log.d(TAG, "No primary clip in clipboard")
+                Log.d(TAG, ">>> [CHECK_CLIPBOARD] No primary clip in clipboard")
                 return
             }
 
             val clip = clipboard.primaryClip
             if (clip == null || clip.itemCount == 0) {
-                Log.d(TAG, "Clipboard clip is null or empty")
+                Log.d(TAG, ">>> [CHECK_CLIPBOARD] Clipboard clip is null or empty")
                 return
             }
 

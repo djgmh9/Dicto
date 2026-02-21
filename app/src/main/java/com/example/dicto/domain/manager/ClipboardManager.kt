@@ -30,7 +30,7 @@ class ClipboardManager(
      * Automatically updates when preference changes
      */
     override val isMonitoringEnabled: StateFlow<Boolean> = preferencesManager.clipboardMonitoringEnabled
-        .stateIn(scope, SharingStarted.Lazily, true)
+        .stateIn(scope, SharingStarted.Lazily, false)  // ✅ Fixed: Default to false (opt-in)
 
     /**
      * StateFlow of floating window enabled state
