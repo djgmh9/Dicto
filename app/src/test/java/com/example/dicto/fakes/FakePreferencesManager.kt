@@ -8,10 +8,11 @@ import kotlinx.coroutines.flow.StateFlow
  * Fake implementation of PreferencesManager for testing
  */
 class FakePreferencesManager : PreferencesManager {
-    private val _clipboardMonitoringEnabled = MutableStateFlow(false)
+    // Made internal so tests can directly set values
+    internal val _clipboardMonitoringEnabled = MutableStateFlow(false)
     override val clipboardMonitoringEnabled: StateFlow<Boolean> = _clipboardMonitoringEnabled
 
-    private val _floatingWindowEnabled = MutableStateFlow(false)
+    internal val _floatingWindowEnabled = MutableStateFlow(false)
     override val floatingWindowEnabled: StateFlow<Boolean> = _floatingWindowEnabled
 
     private val _floatingButtonX = MutableStateFlow(0)
